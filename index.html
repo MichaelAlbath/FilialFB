@@ -1083,7 +1083,7 @@
             <div class="location-section">
                 <div class="form-group">
                     <label for="auditorName">👤 Name des Besuchers (optional):</label>
-                    <input type="text" id="auditorName" placeholder="Ihr vollständiger Name (optional)">
+                    <input type="text" id="auditorName" placeholder="Ihr vollständiger Name (optional)" onkeydown="handleNameFieldKeydown(event)" onblur="handleNameFieldBlur()">
                 </div>
                 
                 <div style="display: flex; gap: 15px; flex-wrap: wrap;">
@@ -2007,6 +2007,40 @@
             }
         });
 
+        // Navigation: Nach Namenseingabe zum Standort springen
+        function handleNameFieldKeydown(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                focusLocationField();
+            }
+        }
+
+        function handleNameFieldBlur() {
+            const nameField = document.getElementById('auditorName');
+            if (nameField.value.trim() !== '') {
+                // Kurze Verzögerung, falls User nur schnell zwischen Feldern wechselt
+                setTimeout(() => {
+                    if (document.activeElement !== nameField) {
+                        focusLocationField();
+                    }
+                }, 100);
+            }
+        }
+
+        function focusLocationField() {
+            const locationField = document.getElementById('locationType');
+            locationField.focus();
+            
+            // Visueller Hinweis
+            locationField.style.transform = 'scale(1.02)';
+            locationField.style.boxShadow = '0 8px 25px rgba(63, 81, 181, 0.25)';
+            
+            setTimeout(() => {
+                locationField.style.transform = '';
+                locationField.style.boxShadow = '';
+            }, 500);
+        }
+
         function toggleLocationDetails() {
             const locationType = document.getElementById('locationType').value;
             const ownSection = document.getElementById('ownBusinessSection');
@@ -2605,83 +2639,8 @@
                 }
             });
 
-            // Alle ursprünglichen Rating-Bereiche wieder hinzufügen (falls welche gelöscht wurden)
-            const ratingsContainer = document.getElementById('ratingsContainer');
-            const defaultRatings = [
-                'aussenbereich', 'aktionszone', 'dekorative-kosmetik', 'regalbild', 
-                'mopro', 'marketingmittel', 'sauberkeit', 'ordnung-kasse', 
-                'pausenraum', 'lager', 'packtische', 'displayzustand'
-            ];
-            
-            const ratingLabels = {
-                'aussenbereich': 'Außenbereich',
-                'aktionszone': 'Aktionszone',
-                'dekorative-kosmetik': 'Dekorative Kosmetik',
-                'regalbild': 'Regalbild',
-                'mopro': 'Mopro',
-                'marketingmittel': 'Marketingmittel',
-                'sauberkeit': 'Sauberkeit',
-                'ordnung-kasse': 'Ordnung Kasse',
-                'pausenraum': 'Pausenraum',
-                'lager': 'Lager',
-                'packtische': 'Packtische',
-                'displayzustand': 'Displayzustand'
-            };
-
-            const ratingDescriptions = {
-                'aussenbereich': 'Warenfülle Schütten, Unkraut, Markise',
-                'aktionszone': 'Aktionsmeter, Saisonwand',
-                'dekorative-kosmetik': 'Ordnung, Abverkaufsware, Spiegel',
-                'regalbild': 'vorgezogen, OOS Situation, FL zugestellt',
-                'mopro': 'Warenfülle, Top 50, Reduzierungen',
-                'marketingmittel': 'Vollständigkeit, kein Tesa',
-                'sauberkeit': 'genereller Eindruck, Spinnweben, Reinigungsleistung Boden',
-                'ordnung-kasse': 'keine Plakate, keine Flyer, freie Arbeitsplätze',
-                'pausenraum': 'Pflegezustand, Kühlschrank',
-                'lager': 'Ordnung, Füllstand Rollis',
-                'packtische': 'sauber und nicht überfrachtet',
-                'displayzustand': 'Befüllung, rechtzeitiger Abbau'
-            };
-
-            // Prüfe welche Rating-Items fehlen und füge sie hinzu
-            defaultRatings.forEach(ratingId => {
-                if (!document.querySelector(`[data-rating="${ratingId}"]`)) {
-                    const ratingHTML = `
-                        <div class="rating-item" data-rating="${ratingId}">
-                            <div class="rating-header">
-                                <div>
-                                    <div class="rating-label" onclick="editRatingTitle('${ratingId}')" title="Klicken zum Bearbeiten">${ratingLabels[ratingId]}</div>
-                                    <div class="rating-description">${ratingDescriptions[ratingId]}</div>
-                                </div>
-                                <button type="button" class="rating-delete" onclick="deleteRating('${ratingId}')">✕ Entfernen</button>
-                            </div>
-                            <div class="star-rating" data-rating-id="${ratingId}">
-                                <span class="star" data-value="1" onclick="setRating('${ratingId}', 1)">☆</span>
-                                <span class="star" data-value="2" onclick="setRating('${ratingId}', 2)">☆</span>
-                                <span class="star" data-value="3" onclick="setRating('${ratingId}', 3)">☆</span>
-                                <span class="star" data-value="4" onclick="setRating('${ratingId}', 4)">☆</span>
-                                <span class="star" data-value="5" onclick="setRating('${ratingId}', 5)">☆</span>
-                            </div>
-                            <div class="rating-value" id="rating-${ratingId}">Noch nicht bewertet</div>
-                        </div>
-                    `;
-                    
-                    // Vor dem "Neue Kategorie hinzufügen" Button einfügen
-                    const addRatingSection = document.querySelector('.add-rating-section');
-                    addRatingSection.insertAdjacentHTML('beforebegin', ratingHTML);
-                }
-            });
-
-            // Auch die Titel der vorhandenen Rating-Items zurücksetzen
-            defaultRatings.forEach(ratingId => {
-                const ratingElement = document.querySelector(`[data-rating="${ratingId}"]`);
-                if (ratingElement) {
-                    const titleElement = ratingElement.querySelector('.rating-label');
-                    if (titleElement) {
-                        titleElement.textContent = ratingLabels[ratingId];
-                    }
-                }
-            });
+            // Standard-Rating-Kategorien wiederherstellen
+            restoreDefaultRatingCategories();
 
             // Neue Datum/Zeit setzen
             const now = new Date();
@@ -2875,10 +2834,20 @@
                 // Try to share
                 await shareFile(blob, 'text/html', filename);
                 
+                // Nach erfolgreichem Teilen: Neues Feedback anbieten
+                setTimeout(() => {
+                    promptForNewFeedback('Nach dem Teilen');
+                }, 1000);
+                
             } catch (error) {
                 console.error('Share Error:', error);
                 // Fallback to mailto
                 emailReport();
+                
+                // Auch bei Fehler: Neues Feedback anbieten
+                setTimeout(() => {
+                    promptForNewFeedback('Nach dem Export-Versuch');
+                }, 1000);
             } finally {
                 // Always reset button state
                 resetButton(button, originalText);
@@ -2981,6 +2950,11 @@ Erstellt: ${new Date().toLocaleString('de-DE')}
                 const fileSizeMB = (zipBlob.size / 1024 / 1024).toFixed(2);
                 alert(`✅ ZIP-Datei erstellt (${fileSizeMB} MB)\n\n📄 HTML: Seitenverhältnis beibehalten, druckerfreundlich\n🖼️ Bilder: Original-Qualität im separaten Ordner\n📝 Anleitung: Erklärt den Inhalt`);
                 
+                // Nach erfolgreichem Download: Neues Feedback anbieten
+                setTimeout(() => {
+                    promptForNewFeedback('Nach dem Download');
+                }, 1500);
+                
             } catch (error) {
                 console.error('ZIP Error:', error);
                 alert('ZIP-Export ist nicht verfügbar. Bitte verwenden Sie eine andere Export-Option.');
@@ -2988,6 +2962,207 @@ Erstellt: ${new Date().toLocaleString('de-DE')}
                 // Always reset button state
                 resetButton(button, originalText);
             }
+        }
+
+        // Automatisch neues Feedback anbieten nach Export
+        function promptForNewFeedback(context) {
+            const auditorName = document.getElementById('auditorName').value.trim() || 'Anonym';
+            const location = document.getElementById('locationType').value === 'own' 
+                ? document.getElementById('ownBusiness').value 
+                : document.getElementById('competitor').value;
+            
+            const confirmed = confirm(
+                `✅ ${context} erfolgreich!\n\n` +
+                `📊 Feedback für: ${location}\n` +
+                `👤 Besucher: ${auditorName}\n\n` +
+                `🔄 Möchten Sie direkt ein neues Feedback starten?\n\n` +
+                `(Alle aktuellen Daten werden zurückgesetzt)`
+            );
+            
+            if (confirmed) {
+                resetFormSilent(); // Ohne zusätzlichen Bestätigungsdialog
+            }
+        }
+
+        // Reset ohne Bestätigungsdialog (für automatische Aufrufe nach Export)
+        function resetFormSilent() {
+            // Gleiche Logik wie resetForm() aber ohne confirm()
+            auditData = {
+                questions: {},
+                images: {},
+                customTitles: {},
+                ratings: {},
+                customRatingTitles: {}
+            };
+            questionCounter = 1;
+            ratingCounter = 0;
+
+            // Alle Formularfelder leeren
+            document.getElementById('auditorName').value = '';
+            document.getElementById('locationType').value = '';
+            document.getElementById('ownBusiness').value = '';
+            document.getElementById('competitor').value = '';
+            
+            // Location sections ausblenden
+            document.getElementById('ownBusinessSection').style.display = 'none';
+            document.getElementById('competitorSection').style.display = 'none';
+
+            // Alle zusätzlichen Fragen entfernen (nur die erste behalten)
+            const questionsContainer = document.getElementById('questionsContainer');
+            const allQuestions = questionsContainer.querySelectorAll('.question-item');
+            
+            // Entferne alle außer der ersten Frage
+            for (let i = 1; i < allQuestions.length; i++) {
+                allQuestions[i].remove();
+            }
+
+            // Erste Frage komplett neu erstellen mit Dropdown
+            const firstQuestion = questionsContainer.querySelector('.question-item[data-question="1"]');
+            if (firstQuestion) {
+                firstQuestion.innerHTML = `
+                    <div class="question-header">
+                        <div class="question-header-left">
+                            <div class="theme-dropdown">
+                                <button type="button" class="question-number" onclick="toggleThemeDropdown(1)" title="Klicken zum Auswählen eines Themen-Titels">Thema 1</button>
+                                <div class="theme-dropdown-content" id="dropdown-1">
+                                    <div class="theme-dropdown-header">📋 Bewertungskategorien wählen</div>
+                                    ${generateRatingDropdownItems(1)}
+                                    <div class="theme-dropdown-item custom" onclick="editTitle(1)">
+                                        ✏️ Freier Titel eingeben
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="camera-icon" onclick="triggerFileInput(1)" title="Fotos von Kamera oder Galerie hinzufügen">📷</button>
+                        </div>
+                        <button type="button" class="delete-question" onclick="deleteQuestion(1)" style="display: none;">✕ Löschen</button>
+                    </div>
+                    <div class="form-group">
+                        <label>📝 Ihre Beobachtung:</label>
+                        <textarea placeholder="Beschreiben Sie hier Ihre Beobachtungen, Auffälligkeiten oder Verbesserungsvorschläge..." oninput="checkForAutoAddQuestion(1)"></textarea>
+                    </div>
+                    <input type="file" class="file-input" accept="image/*" multiple onchange="handleFileUpload(1, this)">
+                    <div class="thumbnails"></div>
+                `;
+            }
+
+            updateDeleteButtons();
+
+            // Alle benutzerdefinierten Rating-Kategorien entfernen
+            const customRatings = document.querySelectorAll('[data-rating^="custom-"]');
+            customRatings.forEach(rating => rating.remove());
+
+            // Rating-Bereiche zurücksetzen
+            const allRatingItems = document.querySelectorAll('.rating-item');
+            allRatingItems.forEach(item => {
+                const stars = item.querySelectorAll('.star');
+                stars.forEach(star => {
+                    star.classList.remove('active');
+                    star.textContent = '☆';
+                });
+                
+                const ratingValue = item.querySelector('.rating-value');
+                if (ratingValue) {
+                    ratingValue.textContent = 'Noch nicht bewertet';
+                    ratingValue.style.color = '#666';
+                }
+            });
+
+            // Standard-Rating-Kategorien wiederherstellen
+            restoreDefaultRatingCategories();
+
+            // Neue Datum/Zeit setzen
+            const now = new Date();
+            const today = now.toISOString().split('T')[0];
+            const currentTime = now.toTimeString().slice(0, 5);
+            
+            document.getElementById('auditDate').value = today;
+            document.getElementById('auditTime').value = currentTime;
+
+            // Zurück zum Formular wechseln
+            document.getElementById('reportView').style.display = 'none';
+            document.getElementById('auditForm').style.display = 'block';
+
+            // Fokus auf Namensfeld setzen für schnelle Neueingabe
+            setTimeout(() => {
+                document.getElementById('auditorName').focus();
+            }, 300);
+        }
+
+        function restoreDefaultRatingCategories() {
+            const defaultRatings = [
+                'aussenbereich', 'aktionszone', 'dekorative-kosmetik', 'regalbild', 
+                'mopro', 'marketingmittel', 'sauberkeit', 'ordnung-kasse', 
+                'pausenraum', 'lager', 'packtische', 'displayzustand'
+            ];
+            
+            const ratingLabels = {
+                'aussenbereich': 'Außenbereich',
+                'aktionszone': 'Aktionszone',
+                'dekorative-kosmetik': 'Dekorative Kosmetik',
+                'regalbild': 'Regalbild',
+                'mopro': 'Mopro',
+                'marketingmittel': 'Marketingmittel',
+                'sauberkeit': 'Sauberkeit',
+                'ordnung-kasse': 'Ordnung Kasse',
+                'pausenraum': 'Pausenraum',
+                'lager': 'Lager',
+                'packtische': 'Packtische',
+                'displayzustand': 'Displayzustand'
+            };
+
+            const ratingDescriptions = {
+                'aussenbereich': 'Warenfülle Schütten, Unkraut, Markise',
+                'aktionszone': 'Aktionsmeter, Saisonwand',
+                'dekorative-kosmetik': 'Ordnung, Abverkaufsware, Spiegel',
+                'regalbild': 'vorgezogen, OOS Situation, FL zugestellt',
+                'mopro': 'Warenfülle, Top 50, Reduzierungen',
+                'marketingmittel': 'Vollständigkeit, kein Tesa',
+                'sauberkeit': 'genereller Eindruck, Spinnweben, Reinigungsleistung Boden',
+                'ordnung-kasse': 'keine Plakate, keine Flyer, freie Arbeitsplätze',
+                'pausenraum': 'Pflegezustand, Kühlschrank',
+                'lager': 'Ordnung, Füllstand Rollis',
+                'packtische': 'sauber und nicht überfrachtet',
+                'displayzustand': 'Befüllung, rechtzeitiger Abbau'
+            };
+
+            // Prüfe welche Rating-Items fehlen und füge sie hinzu
+            defaultRatings.forEach(ratingId => {
+                if (!document.querySelector(`[data-rating="${ratingId}"]`)) {
+                    const ratingHTML = `
+                        <div class="rating-item" data-rating="${ratingId}">
+                            <div class="rating-header">
+                                <div>
+                                    <div class="rating-label" onclick="editRatingTitle('${ratingId}')" title="Klicken zum Bearbeiten">${ratingLabels[ratingId]}</div>
+                                    <div class="rating-description">${ratingDescriptions[ratingId]}</div>
+                                </div>
+                                <button type="button" class="rating-delete" onclick="deleteRating('${ratingId}')">✕ Entfernen</button>
+                            </div>
+                            <div class="star-rating" data-rating-id="${ratingId}">
+                                <span class="star" data-value="1" onclick="setRating('${ratingId}', 1)">☆</span>
+                                <span class="star" data-value="2" onclick="setRating('${ratingId}', 2)">☆</span>
+                                <span class="star" data-value="3" onclick="setRating('${ratingId}', 3)">☆</span>
+                                <span class="star" data-value="4" onclick="setRating('${ratingId}', 4)">☆</span>
+                                <span class="star" data-value="5" onclick="setRating('${ratingId}', 5)">☆</span>
+                            </div>
+                            <div class="rating-value" id="rating-${ratingId}">Noch nicht bewertet</div>
+                        </div>
+                    `;
+                    
+                    const addRatingSection = document.querySelector('.add-rating-section');
+                    addRatingSection.insertAdjacentHTML('beforebegin', ratingHTML);
+                }
+            });
+
+            // Titel der vorhandenen Rating-Items zurücksetzen
+            defaultRatings.forEach(ratingId => {
+                const ratingElement = document.querySelector(`[data-rating="${ratingId}"]`);
+                if (ratingElement) {
+                    const titleElement = ratingElement.querySelector('.rating-label');
+                    if (titleElement) {
+                        titleElement.textContent = ratingLabels[ratingId];
+                    }
+                }
+            });
         }
 
         // Helper function for downloads
