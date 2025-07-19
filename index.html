@@ -1083,7 +1083,7 @@
             <div class="location-section">
                 <div class="form-group">
                     <label for="auditorName">👤 Name des Besuchers (optional):</label>
-                    <input type="text" id="auditorName" placeholder="Ihr vollständiger Name (optional)" onkeydown="handleNameFieldKeydown(event)" onblur="handleNameFieldBlur()">
+                    <input type="text" id="auditorName" placeholder="Ihr vollständiger Name (optional)">
                 </div>
                 
                 <div style="display: flex; gap: 15px; flex-wrap: wrap;">
@@ -2006,77 +2006,6 @@
                 document.querySelectorAll('.theme-dropdown').forEach(d => d.classList.remove('show'));
             }
         });
-
-        // Navigation: Nach Namenseingabe zum Standort springen
-        function handleNameFieldKeydown(event) {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                focusLocationField();
-            }
-        }
-
-        function handleNameFieldBlur() {
-            const nameField = document.getElementById('auditorName');
-            if (nameField.value.trim() !== '') {
-                // Kurze Verzögerung, falls User nur schnell zwischen Feldern wechselt
-                setTimeout(() => {
-                    if (document.activeElement !== nameField) {
-                        focusLocationField();
-                    }
-                }, 100);
-            }
-        }
-
-        function focusLocationField() {
-            const locationField = document.getElementById('locationType');
-            locationField.focus();
-            
-            // Dropdown automatisch öffnen
-            setTimeout(() => {
-                // Dropdown für Standort-Typ öffnen (Budni/Wettbewerb)
-                if (locationField.size) {
-                    locationField.size = 1; // Reset if previously opened
-                }
-                
-                // Simuliere Klick um das native Dropdown zu öffnen
-                const clickEvent = new MouseEvent('click', {
-                    view: window,
-                    bubbles: true,
-                    cancelable: true
-                });
-                locationField.dispatchEvent(clickEvent);
-                
-                // Für bessere Browser-Kompatibilität auch mousedown probieren
-                const mouseDownEvent = new MouseEvent('mousedown', {
-                    view: window,
-                    bubbles: true,
-                    cancelable: true
-                });
-                locationField.dispatchEvent(mouseDownEvent);
-                
-                // Falls native Events nicht funktionieren, size-Trick verwenden
-                setTimeout(() => {
-                    if (document.activeElement === locationField) {
-                        locationField.size = 3; // Zeigt 3 Optionen (leer, budni, wettbewerb)
-                        
-                        // Nach kurzer Zeit wieder auf normale Größe
-                        setTimeout(() => {
-                            locationField.size = 1;
-                        }, 3000);
-                    }
-                }, 50);
-                
-            }, 150);
-            
-            // Visueller Hinweis
-            locationField.style.transform = 'scale(1.02)';
-            locationField.style.boxShadow = '0 8px 25px rgba(63, 81, 181, 0.25)';
-            
-            setTimeout(() => {
-                locationField.style.transform = '';
-                locationField.style.boxShadow = '';
-            }, 1200);
-        }
 
         function toggleLocationDetails() {
             const locationType = document.getElementById('locationType').value;
