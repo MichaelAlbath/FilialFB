@@ -2031,6 +2031,17 @@
             const locationField = document.getElementById('locationType');
             locationField.focus();
             
+            // Dropdown automatisch öffnen
+            setTimeout(() => {
+                // Trigger click event to open dropdown
+                const event = new MouseEvent('mousedown', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true
+                });
+                locationField.dispatchEvent(event);
+            }, 100);
+            
             // Visueller Hinweis
             locationField.style.transform = 'scale(1.02)';
             locationField.style.boxShadow = '0 8px 25px rgba(63, 81, 181, 0.25)';
@@ -2038,7 +2049,7 @@
             setTimeout(() => {
                 locationField.style.transform = '';
                 locationField.style.boxShadow = '';
-            }, 500);
+            }, 800);
         }
 
         function toggleLocationDetails() {
