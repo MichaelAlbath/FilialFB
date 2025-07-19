@@ -145,6 +145,89 @@
             position: relative;
         }
 
+        /* Dropdown für Thementitel */
+        .theme-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .theme-dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 280px;
+            max-width: 320px;
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: 0 8px 25px rgba(63, 81, 181, 0.15);
+            z-index: 1000;
+            border-radius: 12px;
+            border: 2px solid #3f51b5;
+            top: 100%;
+            left: 0;
+            margin-top: 5px;
+            scroll-behavior: smooth;
+        }
+
+        .theme-dropdown.show .theme-dropdown-content {
+            display: block;
+        }
+
+        .theme-dropdown-header {
+            background: linear-gradient(135deg, #3f51b5 0%, #00bcd4 100%);
+            color: white;
+            padding: 12px 15px;
+            font-weight: 600;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .theme-dropdown-item {
+            padding: 12px 15px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+
+        .theme-dropdown-item:hover {
+            background-color: #f8fafc;
+        }
+
+        .theme-dropdown-item:first-of-type:not(.custom) {
+            background-color: #f1f8ff;
+        }
+
+        .theme-dropdown-item:first-of-type:not(.custom):hover {
+            background-color: #e3f2fd;
+        }
+
+        .theme-dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .theme-dropdown-item.custom {
+            background: linear-gradient(135deg, #f1f8ff 0%, #e8f4f8 100%);
+            border-top: 2px solid #e2e8f0;
+            font-weight: 600;
+            color: #3f51b5;
+        }
+
+        .theme-dropdown-item.custom:hover {
+            background: linear-gradient(135deg, #e3f2fd 0%, #e0f2f1 100%);
+        }
+
+        .theme-dropdown-category {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .theme-dropdown-description {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+
         .question-number:hover {
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(63, 81, 181, 0.3);
@@ -550,6 +633,33 @@
             width: 50%;
             height: 1px;
             background: linear-gradient(90deg, transparent, #e1e8ed, transparent);
+        }
+
+        /* Neue Kategorie hinzufügen */
+        .add-rating-section {
+            text-align: center;
+            margin: 25px 0 0 0;
+            padding: 15px 0;
+        }
+
+        .btn-add-rating {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-add-rating:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
         }
 
         @media (max-width: 768px) {
@@ -1171,14 +1281,70 @@
                 <div class="question-item" data-question="1">
                     <div class="question-header">
                         <div class="question-header-left">
-                            <button type="button" class="question-number" onclick="editTitle(1)" title="Klicken zum Bearbeiten des Themen-Titels">Thema 1</button>
+                            <div class="theme-dropdown">
+                                <button type="button" class="question-number" onclick="toggleThemeDropdown(1)" title="Klicken zum Auswählen eines Themen-Titels">Thema 1</button>
+                                <div class="theme-dropdown-content" id="dropdown-1">
+                                    <div class="theme-dropdown-header">📋 Bewertungskategorien wählen</div>
+                                    <div class="theme-dropdown-item" onclick="selectThemeFromRating(1, 'aussenbereich')">
+                                        <div class="theme-dropdown-category">Außenbereich</div>
+                                        <div class="theme-dropdown-description">Warenfülle Schütten, Unkraut, Markise</div>
+                                    </div>
+                                    <div class="theme-dropdown-item" onclick="selectThemeFromRating(1, 'aktionszone')">
+                                        <div class="theme-dropdown-category">Aktionszone</div>
+                                        <div class="theme-dropdown-description">Aktionsmeter, Saisonwand</div>
+                                    </div>
+                                    <div class="theme-dropdown-item" onclick="selectThemeFromRating(1, 'dekorative-kosmetik')">
+                                        <div class="theme-dropdown-category">Dekorative Kosmetik</div>
+                                        <div class="theme-dropdown-description">Ordnung, Abverkaufsware, Spiegel</div>
+                                    </div>
+                                    <div class="theme-dropdown-item" onclick="selectThemeFromRating(1, 'regalbild')">
+                                        <div class="theme-dropdown-category">Regalbild</div>
+                                        <div class="theme-dropdown-description">vorgezogen, OOS Situation, FL zugestellt</div>
+                                    </div>
+                                    <div class="theme-dropdown-item" onclick="selectThemeFromRating(1, 'mopro')">
+                                        <div class="theme-dropdown-category">Mopro</div>
+                                        <div class="theme-dropdown-description">Warenfülle, Top 50, Reduzierungen</div>
+                                    </div>
+                                    <div class="theme-dropdown-item" onclick="selectThemeFromRating(1, 'marketingmittel')">
+                                        <div class="theme-dropdown-category">Marketingmittel</div>
+                                        <div class="theme-dropdown-description">Vollständigkeit, kein Tesa</div>
+                                    </div>
+                                    <div class="theme-dropdown-item" onclick="selectThemeFromRating(1, 'sauberkeit')">
+                                        <div class="theme-dropdown-category">Sauberkeit</div>
+                                        <div class="theme-dropdown-description">genereller Eindruck, Spinnweben, Reinigungsleistung Boden</div>
+                                    </div>
+                                    <div class="theme-dropdown-item" onclick="selectThemeFromRating(1, 'ordnung-kasse')">
+                                        <div class="theme-dropdown-category">Ordnung Kasse</div>
+                                        <div class="theme-dropdown-description">keine Plakate, keine Flyer, freie Arbeitsplätze</div>
+                                    </div>
+                                    <div class="theme-dropdown-item" onclick="selectThemeFromRating(1, 'pausenraum')">
+                                        <div class="theme-dropdown-category">Pausenraum</div>
+                                        <div class="theme-dropdown-description">Pflegezustand, Kühlschrank</div>
+                                    </div>
+                                    <div class="theme-dropdown-item" onclick="selectThemeFromRating(1, 'lager')">
+                                        <div class="theme-dropdown-category">Lager</div>
+                                        <div class="theme-dropdown-description">Ordnung, Füllstand Rollis</div>
+                                    </div>
+                                    <div class="theme-dropdown-item" onclick="selectThemeFromRating(1, 'packtische')">
+                                        <div class="theme-dropdown-category">Packtische</div>
+                                        <div class="theme-dropdown-description">sauber und nicht überfrachtet</div>
+                                    </div>
+                                    <div class="theme-dropdown-item" onclick="selectThemeFromRating(1, 'displayzustand')">
+                                        <div class="theme-dropdown-category">Displayzustand</div>
+                                        <div class="theme-dropdown-description">Befüllung, rechtzeitiger Abbau</div>
+                                    </div>
+                                    <div class="theme-dropdown-item custom" onclick="editTitle(1)">
+                                        ✏️ Freier Titel eingeben
+                                    </div>
+                                </div>
+                            </div>
                             <button type="button" class="camera-icon" onclick="triggerFileInput(1)" title="Fotos von Kamera oder Galerie hinzufügen">📷</button>
                         </div>
                         <button type="button" class="delete-question" onclick="deleteQuestion(1)" style="display: none;">✕ Löschen</button>
                     </div>
                     <div class="form-group">
                         <label>📝 Ihre Beobachtung:</label>
-                        <textarea placeholder="Beschreiben Sie hier Ihre Beobachtungen, Auffälligkeiten oder Verbesserungsvorschläge..."></textarea>
+                        <textarea placeholder="Beschreiben Sie hier Ihre Beobachtungen, Auffälligkeiten oder Verbesserungsvorschläge..." oninput="checkForAutoAddQuestion(1)"></textarea>
                     </div>
                     <input type="file" class="file-input" accept="image/*" multiple onchange="handleFileUpload(1, this)">
                     <div class="thumbnails"></div>
@@ -1412,6 +1578,12 @@
                         <div class="rating-value" id="rating-displayzustand">Noch nicht bewertet</div>
                     </div>
                 </div>
+
+                <div class="add-rating-section">
+                    <button type="button" class="btn-add-rating" onclick="addNewRatingCategory()">
+                        ➕ Neue Bewertungskategorie hinzufügen
+                    </button>
+                </div>
             </div>
 
             <div class="actions">
@@ -1479,6 +1651,7 @@
     <script>
         let questionCounter = 1;
         let currentCollageStyle = 1;
+        let ratingCounter = 0; // Für neue Rating-Kategorien
         let auditData = {
             questions: {},
             images: {},
@@ -1486,6 +1659,313 @@
             ratings: {},
             customRatingTitles: {}
         };
+
+        // Dropdown-Funktionalität für Thementitel
+        function toggleThemeDropdown(questionId) {
+            const dropdown = document.querySelector(`#dropdown-${questionId}`).parentElement;
+            const isOpen = dropdown.classList.contains('show');
+            
+            // Alle anderen Dropdowns schließen
+            document.querySelectorAll('.theme-dropdown').forEach(d => d.classList.remove('show'));
+            
+            // Aktuelles Dropdown umschalten
+            if (!isOpen) {
+                dropdown.classList.add('show');
+                
+                // Dropdown positionieren
+                positionDropdown(dropdown);
+                
+                // Auf ersten Eintrag zentrieren
+                setTimeout(() => {
+                    centerOnFirstItem(dropdown);
+                }, 50); // Kurze Verzögerung damit das Dropdown vollständig gerendert ist
+            }
+        }
+
+        function centerOnFirstItem(dropdown) {
+            const dropdownContent = dropdown.querySelector('.theme-dropdown-content');
+            const firstItem = dropdownContent.querySelector('.theme-dropdown-item:not(.custom)');
+            
+            if (firstItem && dropdownContent) {
+                // Berechne die Position des ersten Elements relativ zum Dropdown
+                const firstItemRect = firstItem.getBoundingClientRect();
+                const dropdownRect = dropdownContent.getBoundingClientRect();
+                
+                // Scroll-Position berechnen um den ersten Eintrag zu zentrieren
+                const dropdownHeight = dropdownContent.clientHeight;
+                const itemHeight = firstItem.offsetHeight;
+                const itemOffsetTop = firstItem.offsetTop;
+                
+                // Zentriere auf den ersten Eintrag
+                const scrollPosition = itemOffsetTop - (dropdownHeight / 2) + (itemHeight / 2);
+                
+                // Smooth scroll zum ersten Eintrag
+                dropdownContent.scrollTo({
+                    top: Math.max(0, scrollPosition),
+                    behavior: 'smooth'
+                });
+                
+                // Kurz den ersten Eintrag hervorheben
+                firstItem.style.backgroundColor = '#e3f2fd';
+                firstItem.style.transform = 'scale(1.02)';
+                firstItem.style.transition = 'all 0.3s ease';
+                
+                setTimeout(() => {
+                    firstItem.style.backgroundColor = '';
+                    firstItem.style.transform = '';
+                }, 800);
+            }
+        }
+
+        function positionDropdown(dropdown) {
+            const dropdownContent = dropdown.querySelector('.theme-dropdown-content');
+            const rect = dropdownContent.getBoundingClientRect();
+            
+            // Prüfen ob Dropdown über den rechten Bildschirmrand hinausgeht
+            if (rect.right > window.innerWidth) {
+                dropdownContent.style.left = 'auto';
+                dropdownContent.style.right = '0';
+            }
+            
+            // Prüfen ob Dropdown über den unteren Bildschirmrand hinausgeht
+            if (rect.bottom > window.innerHeight) {
+                dropdownContent.style.top = 'auto';
+                dropdownContent.style.bottom = '100%';
+                dropdownContent.style.marginTop = '0';
+                dropdownContent.style.marginBottom = '5px';
+            }
+        }
+
+        function selectThemeFromRating(questionId, ratingId) {
+            const ratingLabels = {
+                'aussenbereich': 'Außenbereich',
+                'aktionszone': 'Aktionszone',
+                'dekorative-kosmetik': 'Dekorative Kosmetik',
+                'regalbild': 'Regalbild',
+                'mopro': 'Mopro',
+                'marketingmittel': 'Marketingmittel',
+                'sauberkeit': 'Sauberkeit',
+                'ordnung-kasse': 'Ordnung Kasse',
+                'pausenraum': 'Pausenraum',
+                'lager': 'Lager',
+                'packtische': 'Packtische',
+                'displayzustand': 'Displayzustand'
+            };
+            
+            // Verwende custom title falls vorhanden
+            const title = auditData.customRatingTitles[ratingId] || ratingLabels[ratingId] || ratingId;
+            
+            // Titel setzen
+            auditData.customTitles[questionId] = title;
+            
+            // Button-Text aktualisieren
+            const questionElement = document.querySelector(`[data-question="${questionId}"]`);
+            const titleElement = questionElement.querySelector('.question-number');
+            titleElement.textContent = title;
+            
+            // Dropdown schließen
+            document.querySelectorAll('.theme-dropdown').forEach(d => d.classList.remove('show'));
+        }
+
+        // Automatisches Hinzufügen neuer Themenfelder
+        function checkForAutoAddQuestion(questionId) {
+            // Prüfen ob dies das letzte Themenfeld ist
+            const allQuestions = document.querySelectorAll('.question-item');
+            const currentQuestion = document.querySelector(`[data-question="${questionId}"]`);
+            const isLastQuestion = currentQuestion === allQuestions[allQuestions.length - 1];
+            
+            if (isLastQuestion) {
+                const textarea = currentQuestion.querySelector('textarea');
+                const hasText = textarea.value.trim().length > 0;
+                const hasImages = auditData.images[questionId] && auditData.images[questionId].length > 0;
+                
+                if (hasText || hasImages) {
+                    // Neues Themenfeld hinzufügen ohne zu scrollen
+                    addQuestionSilent();
+                }
+            }
+        }
+
+        function addQuestionSilent() {
+            // Prüfen ob bereits ein leeres letztes Themenfeld existiert
+            const allQuestions = document.querySelectorAll('.question-item');
+            const lastQuestion = allQuestions[allQuestions.length - 1];
+            const lastQuestionId = lastQuestion.getAttribute('data-question');
+            const lastTextarea = lastQuestion.querySelector('textarea');
+            const hasLastText = lastTextarea.value.trim().length > 0;
+            const hasLastImages = auditData.images[lastQuestionId] && auditData.images[lastQuestionId].length > 0;
+            
+            // Nur hinzufügen wenn das letzte Feld nicht leer ist
+            if (hasLastText || hasLastImages) {
+                questionCounter++;
+                const container = document.getElementById('questionsContainer');
+                
+                const questionHTML = `
+                    <div class="question-item" data-question="${questionCounter}">
+                        <div class="question-header">
+                            <div class="question-header-left">
+                                <div class="theme-dropdown">
+                                    <button type="button" class="question-number" onclick="toggleThemeDropdown(${questionCounter})" title="Klicken zum Auswählen eines Themen-Titels">Thema ${questionCounter}</button>
+                                    <div class="theme-dropdown-content" id="dropdown-${questionCounter}">
+                                        <div class="theme-dropdown-header">📋 Bewertungskategorien wählen</div>
+                                        ${generateRatingDropdownItems(questionCounter)}
+                                        <div class="theme-dropdown-item custom" onclick="editTitle(${questionCounter})">
+                                            ✏️ Freier Titel eingeben
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" class="camera-icon" onclick="triggerFileInput(${questionCounter})" title="Fotos von Kamera oder Galerie hinzufügen">📷</button>
+                            </div>
+                            <button type="button" class="delete-question" onclick="deleteQuestion(${questionCounter})">✕ Löschen</button>
+                        </div>
+                        <div class="form-group">
+                            <label>📝 Ihre Beobachtung:</label>
+                            <textarea placeholder="Beschreiben Sie hier Ihre Beobachtungen, Auffälligkeiten oder Verbesserungsvorschläge..." oninput="checkForAutoAddQuestion(${questionCounter})"></textarea>
+                        </div>
+                        <input type="file" class="file-input" accept="image/*" multiple onchange="handleFileUpload(${questionCounter}, this)">
+                        <div class="thumbnails"></div>
+                    </div>
+                `;
+                
+                container.insertAdjacentHTML('beforeend', questionHTML);
+                updateDeleteButtons();
+                
+                // KEIN automatisches Scrollen
+            }
+        }
+
+        function generateRatingDropdownItems(questionId) {
+            const ratingLabels = {
+                'aussenbereich': 'Außenbereich',
+                'aktionszone': 'Aktionszone',
+                'dekorative-kosmetik': 'Dekorative Kosmetik',
+                'regalbild': 'Regalbild',
+                'mopro': 'Mopro',
+                'marketingmittel': 'Marketingmittel',
+                'sauberkeit': 'Sauberkeit',
+                'ordnung-kasse': 'Ordnung Kasse',
+                'pausenraum': 'Pausenraum',
+                'lager': 'Lager',
+                'packtische': 'Packtische',
+                'displayzustand': 'Displayzustand'
+            };
+
+            const ratingDescriptions = {
+                'aussenbereich': 'Warenfülle Schütten, Unkraut, Markise',
+                'aktionszone': 'Aktionsmeter, Saisonwand',
+                'dekorative-kosmetik': 'Ordnung, Abverkaufsware, Spiegel',
+                'regalbild': 'vorgezogen, OOS Situation, FL zugestellt',
+                'mopro': 'Warenfülle, Top 50, Reduzierungen',
+                'marketingmittel': 'Vollständigkeit, kein Tesa',
+                'sauberkeit': 'genereller Eindruck, Spinnweben, Reinigungsleistung Boden',
+                'ordnung-kasse': 'keine Plakate, keine Flyer, freie Arbeitsplätze',
+                'pausenraum': 'Pflegezustand, Kühlschrank',
+                'lager': 'Ordnung, Füllstand Rollis',
+                'packtische': 'sauber und nicht überfrachtet',
+                'displayzustand': 'Befüllung, rechtzeitiger Abbau'
+            };
+
+            let html = '';
+            
+            // Alle aktuellen Rating-Kategorien durchgehen
+            Object.keys(ratingLabels).forEach(ratingId => {
+                const title = auditData.customRatingTitles[ratingId] || ratingLabels[ratingId];
+                const description = ratingDescriptions[ratingId] || '';
+                
+                html += `
+                    <div class="theme-dropdown-item" onclick="selectThemeFromRating(${questionId}, '${ratingId}')">
+                        <div class="theme-dropdown-category">${title}</div>
+                        <div class="theme-dropdown-description">${description}</div>
+                    </div>
+                `;
+            });
+
+            // Auch benutzerdefinierte Rating-Kategorien hinzufügen
+            Object.keys(auditData.customRatingTitles).forEach(ratingId => {
+                if (!ratingLabels[ratingId]) {
+                    const title = auditData.customRatingTitles[ratingId];
+                    html += `
+                        <div class="theme-dropdown-item" onclick="selectThemeFromRating(${questionId}, '${ratingId}')">
+                            <div class="theme-dropdown-category">${title}</div>
+                            <div class="theme-dropdown-description">Benutzerdefinierte Kategorie</div>
+                        </div>
+                    `;
+                }
+            });
+
+            return html;
+        }
+
+        // Neue Rating-Kategorie hinzufügen
+        function addNewRatingCategory() {
+            const categoryName = prompt('Name der neuen Bewertungskategorie:');
+            if (!categoryName || categoryName.trim() === '') {
+                return;
+            }
+
+            const categoryDescription = prompt('Beschreibung der Kategorie (optional):') || 'Benutzerdefinierte Kategorie';
+            
+            ratingCounter++;
+            const ratingId = `custom-${ratingCounter}`;
+            
+            // In auditData speichern
+            auditData.customRatingTitles[ratingId] = categoryName.trim();
+            
+            // HTML für neue Rating-Kategorie
+            const ratingHTML = `
+                <div class="rating-item" data-rating="${ratingId}">
+                    <div class="rating-header">
+                        <div>
+                            <div class="rating-label" onclick="editRatingTitle('${ratingId}')" title="Klicken zum Bearbeiten">${categoryName.trim()}</div>
+                            <div class="rating-description">${categoryDescription}</div>
+                        </div>
+                        <button type="button" class="rating-delete" onclick="deleteRating('${ratingId}')">✕ Entfernen</button>
+                    </div>
+                    <div class="star-rating" data-rating-id="${ratingId}">
+                        <span class="star" data-value="1" onclick="setRating('${ratingId}', 1)">☆</span>
+                        <span class="star" data-value="2" onclick="setRating('${ratingId}', 2)">☆</span>
+                        <span class="star" data-value="3" onclick="setRating('${ratingId}', 3)">☆</span>
+                        <span class="star" data-value="4" onclick="setRating('${ratingId}', 4)">☆</span>
+                        <span class="star" data-value="5" onclick="setRating('${ratingId}', 5)">☆</span>
+                    </div>
+                    <div class="rating-value" id="rating-${ratingId}">Noch nicht bewertet</div>
+                </div>
+            `;
+            
+            // Vor dem "Neue Kategorie hinzufügen" Button einfügen
+            const addRatingSection = document.querySelector('.add-rating-section');
+            addRatingSection.insertAdjacentHTML('beforebegin', ratingHTML);
+            
+            // Alle Dropdown-Menüs aktualisieren
+            updateAllDropdowns();
+            
+            alert(`✅ Neue Bewertungskategorie "${categoryName.trim()}" wurde hinzugefügt!`);
+        }
+
+        function updateAllDropdowns() {
+            // Alle bestehenden Dropdown-Inhalte aktualisieren
+            const dropdowns = document.querySelectorAll('.theme-dropdown-content');
+            dropdowns.forEach(dropdown => {
+                const questionId = dropdown.id.replace('dropdown-', '');
+                const headerElement = dropdown.querySelector('.theme-dropdown-header');
+                const customElement = dropdown.querySelector('.theme-dropdown-item.custom');
+                
+                // Alten Inhalt löschen (außer Header und Custom)
+                const items = dropdown.querySelectorAll('.theme-dropdown-item:not(.custom)');
+                items.forEach(item => item.remove());
+                
+                // Neuen Inhalt hinzufügen
+                const newItems = generateRatingDropdownItems(questionId);
+                headerElement.insertAdjacentHTML('afterend', newItems);
+            });
+        }
+
+        // Dropdowns schließen wenn außerhalb geklickt wird
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.theme-dropdown')) {
+                document.querySelectorAll('.theme-dropdown').forEach(d => d.classList.remove('show'));
+            }
+        });
 
         function toggleLocationDetails() {
             const locationType = document.getElementById('locationType').value;
@@ -1587,14 +2067,23 @@
                 <div class="question-item" data-question="${questionCounter}">
                     <div class="question-header">
                         <div class="question-header-left">
-                            <button type="button" class="question-number" onclick="editTitle(${questionCounter})" title="Klicken zum Bearbeiten des Themen-Titels">Thema ${questionCounter}</button>
+                            <div class="theme-dropdown">
+                                <button type="button" class="question-number" onclick="toggleThemeDropdown(${questionCounter})" title="Klicken zum Auswählen eines Themen-Titels">Thema ${questionCounter}</button>
+                                <div class="theme-dropdown-content" id="dropdown-${questionCounter}">
+                                    <div class="theme-dropdown-header">📋 Bewertungskategorien wählen</div>
+                                    ${generateRatingDropdownItems(questionCounter)}
+                                    <div class="theme-dropdown-item custom" onclick="editTitle(${questionCounter})">
+                                        ✏️ Freier Titel eingeben
+                                    </div>
+                                </div>
+                            </div>
                             <button type="button" class="camera-icon" onclick="triggerFileInput(${questionCounter})" title="Fotos von Kamera oder Galerie hinzufügen">📷</button>
                         </div>
                         <button type="button" class="delete-question" onclick="deleteQuestion(${questionCounter})">✕ Löschen</button>
                     </div>
                     <div class="form-group">
                         <label>📝 Ihre Beobachtung:</label>
-                        <textarea placeholder="Beschreiben Sie hier Ihre Beobachtungen, Auffälligkeiten oder Verbesserungsvorschläge..."></textarea>
+                        <textarea placeholder="Beschreiben Sie hier Ihre Beobachtungen, Auffälligkeiten oder Verbesserungsvorschläge..." oninput="checkForAutoAddQuestion(${questionCounter})"></textarea>
                     </div>
                     <input type="file" class="file-input" accept="image/*" multiple onchange="handleFileUpload(${questionCounter}, this)">
                     <div class="thumbnails"></div>
@@ -1652,6 +2141,9 @@
                             size: compressedFile.size
                         });
                         updateThumbnails(questionId);
+                        
+                        // Prüfen ob automatisch neues Themenfeld hinzugefügt werden soll
+                        checkForAutoAddQuestion(questionId);
                     };
                     reader.readAsDataURL(compressedFile);
                 });
@@ -1998,6 +2490,7 @@
                 customRatingTitles: {}
             };
             questionCounter = 1;
+            ratingCounter = 0;
 
             // Alle Formularfelder leeren
             document.getElementById('auditorName').value = '';
@@ -2018,28 +2511,41 @@
                 allQuestions[i].remove();
             }
 
-            // Erste Frage zurücksetzen
+            // Erste Frage komplett neu erstellen mit Dropdown
             const firstQuestion = questionsContainer.querySelector('.question-item[data-question="1"]');
             if (firstQuestion) {
-                // Textarea leeren
-                const textarea = firstQuestion.querySelector('textarea');
-                textarea.value = '';
-                
-                // Titel zurücksetzen
-                const titleElement = firstQuestion.querySelector('.question-number');
-                titleElement.textContent = 'Thema 1';
-                
-                // Thumbnails leeren
-                const thumbnailsContainer = firstQuestion.querySelector('.thumbnails');
-                thumbnailsContainer.innerHTML = '';
-                
-                // File input zurücksetzen
-                const fileInput = firstQuestion.querySelector('.file-input');
-                fileInput.value = '';
+                firstQuestion.innerHTML = `
+                    <div class="question-header">
+                        <div class="question-header-left">
+                            <div class="theme-dropdown">
+                                <button type="button" class="question-number" onclick="toggleThemeDropdown(1)" title="Klicken zum Auswählen eines Themen-Titels">Thema 1</button>
+                                <div class="theme-dropdown-content" id="dropdown-1">
+                                    <div class="theme-dropdown-header">📋 Bewertungskategorien wählen</div>
+                                    ${generateRatingDropdownItems(1)}
+                                    <div class="theme-dropdown-item custom" onclick="editTitle(1)">
+                                        ✏️ Freier Titel eingeben
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="camera-icon" onclick="triggerFileInput(1)" title="Fotos von Kamera oder Galerie hinzufügen">📷</button>
+                        </div>
+                        <button type="button" class="delete-question" onclick="deleteQuestion(1)" style="display: none;">✕ Löschen</button>
+                    </div>
+                    <div class="form-group">
+                        <label>📝 Ihre Beobachtung:</label>
+                        <textarea placeholder="Beschreiben Sie hier Ihre Beobachtungen, Auffälligkeiten oder Verbesserungsvorschläge..." oninput="checkForAutoAddQuestion(1)"></textarea>
+                    </div>
+                    <input type="file" class="file-input" accept="image/*" multiple onchange="handleFileUpload(1, this)">
+                    <div class="thumbnails"></div>
+                `;
             }
 
             // Delete-Buttons aktualisieren
             updateDeleteButtons();
+
+            // Alle benutzerdefinierten Rating-Kategorien entfernen
+            const customRatings = document.querySelectorAll('[data-rating^="custom-"]');
+            customRatings.forEach(rating => rating.remove());
 
             // Rating-Bereiche zurücksetzen
             const allRatingItems = document.querySelectorAll('.rating-item');
@@ -2119,7 +2625,10 @@
                             <div class="rating-value" id="rating-${ratingId}">Noch nicht bewertet</div>
                         </div>
                     `;
-                    ratingsContainer.insertAdjacentHTML('beforeend', ratingHTML);
+                    
+                    // Vor dem "Neue Kategorie hinzufügen" Button einfügen
+                    const addRatingSection = document.querySelector('.add-rating-section');
+                    addRatingSection.insertAdjacentHTML('beforebegin', ratingHTML);
                 }
             });
 
@@ -2438,127 +2947,6 @@ Erstellt: ${new Date().toLocaleString('de-DE')}
             } finally {
                 // Always reset button state
                 resetButton(button, originalText);
-            }
-        }
-
-        // 4. Cloud Integration (Dropbox/Google Drive)
-        async function saveToCloud() {
-            const cloudOptions = [
-                {
-                    name: 'Dropbox',
-                    action: () => saveToDropbox()
-                },
-                {
-                    name: 'Google Drive',
-                    action: () => saveToGoogleDrive()
-                },
-                {
-                    name: 'iCloud (Safari)',
-                    action: () => saveToICloud()
-                }
-            ];
-            
-            // Show options
-            const choice = prompt(`Wählen Sie einen Cloud-Service:\n${cloudOptions.map((opt, i) => `${i + 1}. ${opt.name}`).join('\n')}\n\nGeben Sie die Nummer ein (1-${cloudOptions.length}):`);
-            
-            const index = parseInt(choice) - 1;
-            if (index >= 0 && index < cloudOptions.length) {
-                cloudOptions[index].action();
-            } else {
-                alert('Ungültige Auswahl.');
-            }
-        }
-
-        function saveToDropbox() {
-            const button = getButtonElement();
-            const originalText = setButtonLoading(button, '⏳ Bereite Dropbox vor...');
-            
-            try {
-                // Generate Dropbox share link
-                alert('Dropbox-Integration würde hier implementiert. Aktuell: Komprimierte HTML-Version wird heruntergeladen.');
-                
-                // Download compressed HTML for manual upload
-                downloadCompressedHTML();
-            } finally {
-                resetButton(button, originalText);
-            }
-        }
-
-        function saveToGoogleDrive() {
-            const button = getButtonElement();
-            const originalText = setButtonLoading(button, '⏳ Bereite Google Drive vor...');
-            
-            try {
-                alert('Google Drive-Integration würde hier implementiert. Aktuell: ZIP-Download mit komprimierter HTML und Original-Bildern.');
-                downloadAsZIP();
-            } finally {
-                resetButton(button, originalText);
-            }
-        }
-
-        async function saveToICloud() {
-            // Safari specific - try to trigger iCloud save
-            if (navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome')) {
-                const button = getButtonElement();
-                const originalText = setButtonLoading(button, '⏳ Bereite iCloud vor...');
-                
-                try {
-                    const htmlContent = await generateCompressedReportHTML();
-                    const blob = new Blob([htmlContent], { type: 'text/html' });
-                    const filename = `Budni-Besuchsfeedback-${new Date().toISOString().split('T')[0]}.html`;
-                    downloadBlob(blob, filename);
-                    alert('Komprimierte HTML-Datei wurde heruntergeladen. In Safari: Datei öffnen und "In Dateien speichern" wählen für iCloud.');
-                } catch (error) {
-                    console.error('iCloud save error:', error);
-                    alert('iCloud-Speicherung fehlgeschlagen. Bitte anderen Export verwenden.');
-                } finally {
-                    resetButton(button, originalText);
-                }
-            } else {
-                alert('iCloud-Speicherung ist nur in Safari verfügbar.');
-            }
-        }
-
-        // 5. Server-Backend Email (requires backend)
-        async function emailViaServer() {
-            const serverUrl = prompt('Server-Endpoint URL eingeben (leer lassen für Demo):');
-            
-            if (!serverUrl) {
-                alert('Server-Integration Demo:\n\nDies würde an einen PHP/Node.js Server senden:\n- Feedback-Daten als JSON\n- Bilder als Base64\n- Server erstellt PDF und versendet E-Mail\n\nAktuell: Bitte anderen Export verwenden.');
-                return;
-            }
-            
-            try {
-                const auditorName = document.getElementById('auditorName').value.trim() || 'Anonym';
-                const feedbackData = {
-                    auditor: auditorName,
-                    date: document.getElementById('auditDate').value,
-                    time: document.getElementById('auditTime').value,
-                    location: document.getElementById('locationType').value === 'own' 
-                        ? document.getElementById('ownBusiness').value 
-                        : document.getElementById('competitor').value,
-                    locationType: document.getElementById('locationType').value,
-                    questions: auditData.questions,
-                    images: auditData.images
-                };
-                
-                const response = await fetch(serverUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(feedbackData)
-                });
-                
-                if (response.ok) {
-                    alert('Feedback erfolgreich versendet!');
-                } else {
-                    throw new Error('Server-Fehler');
-                }
-                
-            } catch (error) {
-                console.error('Server Error:', error);
-                alert('Server-Versand fehlgeschlagen. Bitte anderen Export verwenden.');
             }
         }
 
@@ -3142,120 +3530,6 @@ Erstellt: ${new Date().toLocaleString('de-DE')}
             `;
             
             return htmlContent;
-        }
-
-        function generateReportHTML() {
-            // Fallback to simple version if compression fails
-            const reportView = document.getElementById('reportView');
-            return `
-                <!DOCTYPE html>
-                <html lang="de">
-                <head>
-                    <meta charset="UTF-8">
-                    <title>Besuchsfeedback</title>
-                    <style>
-                        body { 
-                            font-family: Arial, sans-serif; 
-                            margin: 40px; 
-                            line-height: 1.6; 
-                            color: #333;
-                        }
-                        .report-header { 
-                            text-align: center; 
-                            margin-bottom: 40px; 
-                            border-bottom: 2px solid #3f51b5; 
-                            padding-bottom: 20px; 
-                        }
-                        .report-section { 
-                            margin-bottom: 30px; 
-                            padding: 20px; 
-                            border: 1px solid #ddd; 
-                            border-radius: 8px; 
-                            break-inside: avoid;
-                        }
-                        .report-images { 
-                            display: grid; 
-                            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
-                            gap: 12px; 
-                            margin-top: 20px; 
-                        }
-                        .report-image { 
-                            border-radius: 8px; 
-                            overflow: hidden; 
-                            box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
-                            background: #f0f0f0;
-                            min-height: 140px;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            cursor: pointer;
-                        }
-                        .report-image:hover {
-                            transform: scale(1.02);
-                        }
-                        .report-image img { 
-                            max-width: 100%; 
-                            max-height: 200px; 
-                            width: auto;
-                            height: auto;
-                            object-fit: contain; 
-                        }
-                        
-                        /* Mobile */
-                        @media (max-width: 768px) {
-                            body { margin: 20px; }
-                            .report-images { 
-                                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); 
-                                gap: 8px; 
-                            }
-                            .report-image { min-height: 120px; }
-                            .report-image img { max-height: 160px; }
-                        }
-                        
-                        /* Print - Druckerfreundlich */
-                        @media print {
-                            body { 
-                                margin: 20px; 
-                                font-size: 12px;
-                                color: #000;
-                            }
-                            .report-header {
-                                border-bottom: 2px solid #000;
-                            }
-                            .report-section { 
-                                margin-bottom: 25px; 
-                                padding: 15px; 
-                                border: 1px solid #333; 
-                                background: #fff; 
-                                break-inside: avoid;
-                                page-break-inside: avoid;
-                            }
-                            .report-images { 
-                                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
-                                gap: 8px; 
-                                break-inside: avoid;
-                            }
-                            .report-image { 
-                                min-height: 120px;
-                                border: 1px solid #ccc;
-                                box-shadow: none;
-                                background: #fff;
-                            }
-                            .report-image:hover {
-                                transform: none;
-                            }
-                            .report-image img { 
-                                max-height: 150px;
-                                object-fit: contain;
-                            }
-                        }
-                    </style>
-                </head>
-                <body>
-                    ${reportView.innerHTML}
-                </body>
-                </html>
-            `;
         }
 
         // Helper functions for button state management
