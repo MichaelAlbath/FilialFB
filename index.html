@@ -2033,14 +2033,40 @@
             
             // Dropdown automatisch öffnen
             setTimeout(() => {
-                // Trigger click event to open dropdown
-                const event = new MouseEvent('mousedown', {
+                // Dropdown für Standort-Typ öffnen (Budni/Wettbewerb)
+                if (locationField.size) {
+                    locationField.size = 1; // Reset if previously opened
+                }
+                
+                // Simuliere Klick um das native Dropdown zu öffnen
+                const clickEvent = new MouseEvent('click', {
                     view: window,
                     bubbles: true,
                     cancelable: true
                 });
-                locationField.dispatchEvent(event);
-            }, 100);
+                locationField.dispatchEvent(clickEvent);
+                
+                // Für bessere Browser-Kompatibilität auch mousedown probieren
+                const mouseDownEvent = new MouseEvent('mousedown', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true
+                });
+                locationField.dispatchEvent(mouseDownEvent);
+                
+                // Falls native Events nicht funktionieren, size-Trick verwenden
+                setTimeout(() => {
+                    if (document.activeElement === locationField) {
+                        locationField.size = 3; // Zeigt 3 Optionen (leer, budni, wettbewerb)
+                        
+                        // Nach kurzer Zeit wieder auf normale Größe
+                        setTimeout(() => {
+                            locationField.size = 1;
+                        }, 3000);
+                    }
+                }, 50);
+                
+            }, 150);
             
             // Visueller Hinweis
             locationField.style.transform = 'scale(1.02)';
@@ -2049,7 +2075,7 @@
             setTimeout(() => {
                 locationField.style.transform = '';
                 locationField.style.boxShadow = '';
-            }, 800);
+            }, 1200);
         }
 
         function toggleLocationDetails() {
