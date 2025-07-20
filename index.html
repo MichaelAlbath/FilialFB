@@ -1083,7 +1083,7 @@
             <div class="location-section">
                 <div class="form-group">
                     <label for="auditorName">👤 Name des Besuchers (optional):</label>
-                    <input type="text" id="auditorName" placeholder="Ihr vollständiger Name (optional)">
+                    <input type="text" id="auditorName" placeholder="Ihr vollständiger Name (optional)" onkeydown="preventAutoNavigation(event)">
                 </div>
                 
                 <div style="display: flex; gap: 15px; flex-wrap: wrap;">
@@ -2006,6 +2006,15 @@
                 document.querySelectorAll('.theme-dropdown').forEach(d => d.classList.remove('show'));
             }
         });
+
+        // Verhindere automatische Navigation nach Namenseingabe
+        function preventAutoNavigation(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                // Fokus bleibt im aktuellen Feld - keine automatische Navigation
+                return false;
+            }
+        }
 
         function toggleLocationDetails() {
             const locationType = document.getElementById('locationType').value;
