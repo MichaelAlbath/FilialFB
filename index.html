@@ -2530,6 +2530,9 @@
                 return;
             }
 
+            // Schutz temporär deaktivieren für gewollten Reset
+            window.onbeforeunload = null;
+
             // Alle Daten zurücksetzen
             auditData = {
                 questions: {},
@@ -2628,6 +2631,11 @@
             // Zurück zum Formular wechseln (falls man im Report war)
             document.getElementById('reportView').style.display = 'none';
             document.getElementById('auditForm').style.display = 'block';
+
+            // Schutz wieder aktivieren nach Reset
+            setTimeout(() => {
+                setupPageProtection();
+            }, 100);
 
             // Erfolgsmeldung
             alert('✅ Neues Feedback gestartet!\n\nAlle Felder wurden zurückgesetzt und sind bereit für die nächste Erfassung.');
@@ -2961,6 +2969,9 @@ Erstellt: ${new Date().toLocaleString('de-DE')}
 
         // Reset ohne Bestätigungsdialog (für automatische Aufrufe nach Export)
         function resetFormSilent() {
+            // Schutz temporär deaktivieren für gewollten Reset
+            window.onbeforeunload = null;
+            
             // Gleiche Logik wie resetForm() aber ohne confirm()
             auditData = {
                 questions: {},
@@ -3056,6 +3067,11 @@ Erstellt: ${new Date().toLocaleString('de-DE')}
             // Zurück zum Formular wechseln
             document.getElementById('reportView').style.display = 'none';
             document.getElementById('auditForm').style.display = 'block';
+
+            // Schutz wieder aktivieren nach Reset
+            setTimeout(() => {
+                setupPageProtection();
+            }, 100);
 
             // Fokus auf Namensfeld setzen für schnelle Neueingabe
             setTimeout(() => {
@@ -3751,7 +3767,78 @@ Erstellt: ${new Date().toLocaleString('de-DE')}
             
             // Check available features
             checkExportFeatures();
+            
+            // Verhindere ungewollte Seitenaktualisierung
+            setupPageProtection();
         });
+
+        // Schutz vor ungewollter Seitenaktualisierung
+        function setupPageProtection() {
+            // Warnung bei Verlassen der Seite wenn Daten eingegeben wurden
+            window.addEventListener('beforeunload', function(event) {
+                if (hasUserData()) {
+                    const message = 'Sie haben ungespeicherte Änderungen. Möchten Sie die Seite wirklich verlassen?';
+                    event.preventDefault();
+                    event.returnValue = message; // Standard für die meisten Browser
+                    return message; // Für ältere Browser
+                }
+            });
+
+            // Verhindere automatische Aktualisierung durch Browser
+            window.addEventListener('pageshow', function(event) {
+                if (event.persisted) {
+                    // Seite wurde aus dem Cache geladen
+                    console.log('Seite aus Cache geladen - Daten bleiben erhalten');
+                }
+            });
+
+            // Verhindere F5/Ctrl+R ohne Warnung
+            document.addEventListener('keydown', function(event) {
+                // F5 oder Ctrl+R / Cmd+R
+                if (event.key === 'F5' || 
+                    (event.ctrlKey && event.key === 'r') || 
+                    (event.metaKey && event.key === 'r')) {
+                    
+                    if (hasUserData()) {
+                        event.preventDefault();
+                        const confirmed = confirm(
+                            '🔄 Seite aktualisieren?\n\n' +
+                            'Alle eingegebenen Daten gehen verloren.\n' +
+                            'Möchten Sie wirklich fortfahren?'
+                        );
+                        
+                        if (confirmed) {
+                            // Schutz temporär deaktivieren für gewollte Aktualisierung
+                            window.onbeforeunload = null;
+                            location.reload();
+                        }
+                    }
+                }
+            });
+        }
+
+        // Prüfe ob User bereits Daten eingegeben hat
+        function hasUserData() {
+            // Name eingegeben
+            const hasName = document.getElementById('auditorName').value.trim() !== '';
+            
+            // Standort ausgewählt
+            const hasLocation = document.getElementById('locationType').value !== '';
+            
+            // Text in irgendeinem Themenfeld
+            const hasText = Array.from(document.querySelectorAll('.question-item textarea'))
+                .some(textarea => textarea.value.trim() !== '');
+            
+            // Bilder hochgeladen
+            const hasImages = Object.keys(auditData.images).some(key => 
+                auditData.images[key] && auditData.images[key].length > 0
+            );
+            
+            // Bewertungen gegeben
+            const hasRatings = Object.keys(auditData.ratings).length > 0;
+            
+            return hasName || hasLocation || hasText || hasImages || hasRatings;
+        }
 
         function checkExportFeatures() {
             console.log('🔍 Checking Export Features:');
