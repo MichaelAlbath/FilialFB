@@ -2383,6 +2383,22 @@
             // Show report view
             document.getElementById('auditForm').style.display = 'none';
             document.getElementById('reportView').style.display = 'block';
+            
+            // Nach erfolgreichem Report: Schutz temporär lockern (Report-Ansicht ist sicher)
+            window.onbeforeunload = function(event) {
+                // Nur warnen wenn User zurück zum Formular geht
+                const reportView = document.getElementById('reportView');
+                if (reportView.style.display === 'block') {
+                    return; // Keine Warnung in Report-Ansicht
+                }
+                
+                if (hasUserData()) {
+                    const message = 'Sie haben ungespeicherte Änderungen. Möchten Sie die Seite wirklich verlassen?';
+                    event.preventDefault();
+                    event.returnValue = message;
+                    return message;
+                }
+            };
         }
 
         function createReport(auditorName, auditDate, auditTime, locationType, location) {
@@ -2520,6 +2536,9 @@
         function backToForm() {
             document.getElementById('reportView').style.display = 'none';
             document.getElementById('auditForm').style.display = 'block';
+            
+            // Schutz wieder vollständig aktivieren beim Zurück zum Formular
+            setupPageProtection();
         }
 
         function resetForm() {
@@ -2817,7 +2836,8 @@
                 // Try to share
                 await shareFile(blob, 'text/html', filename);
                 
-                // Nach erfolgreichem Teilen: Neues Feedback anbieten
+                // Nach erfolgreichem Teilen: Schutz deaktivieren und neues Feedback anbieten
+                window.onbeforeunload = null; // Erfolgreich geteilt = Daten sind gesichert
                 setTimeout(() => {
                     promptForNewFeedback('Nach dem Teilen');
                 }, 1000);
@@ -2933,7 +2953,8 @@ Erstellt: ${new Date().toLocaleString('de-DE')}
                 const fileSizeMB = (zipBlob.size / 1024 / 1024).toFixed(2);
                 alert(`✅ ZIP-Datei erstellt (${fileSizeMB} MB)\n\n📄 HTML: Seitenverhältnis beibehalten, druckerfreundlich\n🖼️ Bilder: Original-Qualität im separaten Ordner\n📝 Anleitung: Erklärt den Inhalt`);
                 
-                // Nach erfolgreichem Download: Neues Feedback anbieten
+                // Nach erfolgreichem Download: Schutz deaktivieren und neues Feedback anbieten
+                window.onbeforeunload = null; // Erfolgreich heruntergeladen = Daten sind gesichert
                 setTimeout(() => {
                     promptForNewFeedback('Nach dem Download');
                 }, 1500);
@@ -3815,6 +3836,118 @@ Erstellt: ${new Date().toLocaleString('de-DE')}
                     }
                 }
             });
+
+            // Netzwerkwechsel-Schutz
+            setupNetworkProtection();
+        }
+
+        // Schutz vor automatischem Neuladen bei Netzwerkwechsel
+        function setupNetworkProtection() {
+            let wasOffline = false;
+            let networkChangeTimeout = null;
+
+            // Online/Offline Events
+            window.addEventListener('online', function() {
+                if (wasOffline && hasUserData()) {
+                    clearTimeout(networkChangeTimeout);
+                    networkChangeTimeout = setTimeout(() => {
+                        const confirmed = confirm(
+                            '🌐 Netzwerkverbindung wiederhergestellt!\n\n' +
+                            'Ihr Browser möchte möglicherweise die Seite neu laden.\n' +
+                            'Sie haben ungespeicherte Feedback-Daten.\n\n' +
+                            '🔄 Seite jetzt neu laden?\n' +
+                            '(Alle Daten gehen verloren)\n\n' +
+                            'ODER\n\n' +
+                            '💾 Weiterarbeiten?\n' +
+                            '(Daten bleiben erhalten, exportieren Sie bald!)'
+                        );
+                        
+                        if (confirmed) {
+                            window.onbeforeunload = null;
+                            location.reload();
+                        } else {
+                            // User möchte weiterarbeiten - zusätzliche Warnung
+                            setTimeout(() => {
+                                if (hasUserData()) {
+                                    alert('💡 Tipp: Speichern Sie Ihr Feedback bald!\n\nVerwenden Sie "📊 Feedback erstellen" und dann\n"📱 Teilen" oder "💾 Als ZIP herunterladen"\num Datenverlust zu vermeiden.');
+                                }
+                            }, 2000);
+                        }
+                    }, 1000); // 1 Sekunde warten nach Verbindung
+                }
+                wasOffline = false;
+            });
+
+            window.addEventListener('offline', function() {
+                wasOffline = true;
+                if (hasUserData()) {
+                    alert('📡 Netzwerkverbindung unterbrochen!\n\n📝 Ihre Feedback-Daten bleiben erhalten.\n💾 Speichern Sie bei Gelegenheit, sobald Sie wieder online sind.');
+                }
+            });
+
+            // Sichtbarkeitsänderung (Tab-Wechsel) - manchmal triggert Browser hier Reloads
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden && hasUserData()) {
+                    // Tab wieder sichtbar - kurz prüfen ob Browser reload versucht
+                    setTimeout(() => {
+                        if (window.performance && window.performance.navigation.type === 1) {
+                            // Seite wurde reload - zu spät, aber für Debug
+                            console.warn('Unerwarteter Seitenreload nach Tab-Wechsel erkannt');
+                        }
+                    }, 100);
+                }
+            });
+
+            // Connection API falls verfügbar (experimentell)
+            if ('connection' in navigator) {
+                const connection = navigator.connection;
+                
+                connection.addEventListener('change', function() {
+                    if (hasUserData()) {
+                        console.log(`Netzwerk geändert: ${connection.effectiveType} (${connection.downlink} Mbps)`);
+                        
+                        // Bei größeren Netzwerkänderungen warnen
+                        const networkChangeTimeout = setTimeout(() => {
+                            if (hasUserData()) {
+                                const userChoice = confirm(
+                                    '📶 Netzwerkänderung erkannt!\n\n' +
+                                    `Neue Verbindung: ${connection.effectiveType}\n` +
+                                    'Geschwindigkeit: ' + connection.downlink + ' Mbps\n\n' +
+                                    'Manche Browser laden bei Netzwerkwechsel automatisch neu.\n\n' +
+                                    '💾 Möchten Sie Ihr Feedback jetzt sicherheitshalber exportieren?'
+                                );
+                                
+                                if (userChoice) {
+                                    // Scroll zum Export-Bereich
+                                    const reportButton = document.querySelector('.btn.btn-success');
+                                    if (reportButton) {
+                                        reportButton.scrollIntoView({ behavior: 'smooth' });
+                                        reportButton.style.animation = 'pulse 2s infinite';
+                                        setTimeout(() => {
+                                            reportButton.style.animation = '';
+                                        }, 6000);
+                                    }
+                                }
+                            }
+                        }, 2000);
+                    }
+                });
+            }
+
+            // Page Freeze API (für moderne Browser)
+            if ('onfreeze' in document) {
+                document.addEventListener('freeze', function(event) {
+                    if (hasUserData()) {
+                        console.log('Seite wird eingefroren - Daten könnten gefährdet sein');
+                    }
+                });
+
+                document.addEventListener('resume', function(event) {
+                    if (hasUserData()) {
+                        console.log('Seite wieder aktiv - Daten prüfen');
+                    }
+                });
+            }
         }
 
         // Prüfe ob User bereits Daten eingegeben hat
