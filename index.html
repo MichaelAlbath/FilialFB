@@ -2393,7 +2393,7 @@
                 }
                 
                 if (hasUserData()) {
-                    const message = 'Sie haben ungespeicherte Änderungen. Möchten Sie die Seite wirklich verlassen?';
+                    const message = '⚠️ Seite verlassen?\n\nAlle Feedback-Daten gehen verloren!';
                     event.preventDefault();
                     event.returnValue = message;
                     return message;
@@ -3798,7 +3798,7 @@ Erstellt: ${new Date().toLocaleString('de-DE')}
             // Warnung bei Verlassen der Seite wenn Daten eingegeben wurden
             window.addEventListener('beforeunload', function(event) {
                 if (hasUserData()) {
-                    const message = 'Sie haben ungespeicherte Änderungen. Möchten Sie die Seite wirklich verlassen?';
+                    const message = '⚠️ Seite verlassen?\n\nAlle Feedback-Daten gehen verloren!';
                     event.preventDefault();
                     event.returnValue = message; // Standard für die meisten Browser
                     return message; // Für ältere Browser
@@ -3824,8 +3824,9 @@ Erstellt: ${new Date().toLocaleString('de-DE')}
                         event.preventDefault();
                         const confirmed = confirm(
                             '🔄 Seite aktualisieren?\n\n' +
-                            'Alle eingegebenen Daten gehen verloren.\n' +
-                            'Möchten Sie wirklich fortfahren?'
+                            'Aktion: F5/Strg+R gedrückt\n' +
+                            'Folge: Alle Feedback-Daten gehen verloren\n\n' +
+                            'Trotzdem fortfahren?'
                         );
                         
                         if (confirmed) {
@@ -3839,6 +3840,241 @@ Erstellt: ${new Date().toLocaleString('de-DE')}
 
             // Netzwerkwechsel-Schutz
             setupNetworkProtection();
+            
+            // Zusätzliche Browser-spezifische Schutzmaßnahmen
+            setupAdvancedProtection();
+        }
+
+        // Erweiterte Schutzmaßnahmen für spezielle Browser-Situationen
+        function setupAdvancedProtection() {
+            // 1. Mobile Browser Tab-Discarding Detection
+            if ('onfreeze' in document) {
+                document.addEventListener('freeze', function() {
+                    if (hasUserData()) {
+                        console.warn('⚠️ Tab wird eingefroren - Daten könnten verloren gehen');
+                        // Notfall-Backup erstellen
+                        createEmergencyBackup();
+                    }
+                });
+
+                document.addEventListener('resume', function() {
+                    console.log('📱 Tab wieder aktiv - prüfe Daten-Integrität');
+                    checkDataIntegrity();
+                });
+            }
+
+            // 2. Memory Pressure Detection (experimentell)
+            if ('memory' in performance) {
+                setInterval(() => {
+                    if (performance.memory.usedJSHeapSize > performance.memory.jsHeapSizeLimit * 0.9) {
+                        if (hasUserData()) {
+                            console.warn('⚠️ Speicher fast voll - Browser könnte Tab neu laden');
+                            suggestDataExport('Speicher wird knapp');
+                        }
+                    }
+                }, 30000); // Alle 30 Sekunden prüfen
+            }
+
+            // 3. Page Visibility - erweiterte Tab-Wechsel Erkennung
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) {
+                    // Tab wird versteckt - könnte entladen werden
+                    if (hasUserData()) {
+                        createQuickBackup();
+                    }
+                } else {
+                    // Tab wieder sichtbar
+                    setTimeout(() => {
+                        if (hasUserData()) {
+                            detectUnexpectedReload();
+                        }
+                    }, 100);
+                }
+            });
+
+            // 4. Browser-Crash Recovery Detection
+            if (window.performance && window.performance.navigation) {
+                if (window.performance.navigation.type === 1) {
+                    // Seite wurde per reload geöffnet
+                    setTimeout(() => {
+                        checkForRecoveryData();
+                    }, 1000);
+                }
+            }
+
+            // 5. Developer Tools Detection (können Reloads verursachen)
+            let devtools = {open: false, orientation: null};
+            setInterval(() => {
+                if (window.outerHeight - window.innerHeight > 160 || 
+                    window.outerWidth - window.innerWidth > 160) {
+                    if (!devtools.open && hasUserData()) {
+                        console.log('🔧 DevTools geöffnet - könnte Reload verursachen');
+                        devtools.open = true;
+                    }
+                } else {
+                    devtools.open = false;
+                }
+            }, 2000);
+
+            // 6. Unload-Events die beforeunload umgehen
+            window.addEventListener('pagehide', function(event) {
+                if (hasUserData()) {
+                    console.warn('⚠️ Seite wird versteckt - letzter Backup-Versuch');
+                    createEmergencyBackup();
+                }
+            });
+
+            // 7. Mobile-spezifische Events
+            if ('orientation' in window) {
+                window.addEventListener('orientationchange', function() {
+                    if (hasUserData()) {
+                        setTimeout(() => {
+                            checkDataIntegrity();
+                        }, 1000);
+                    }
+                });
+            }
+        }
+
+        // Notfall-Backup in Browser-Session Storage
+        function createEmergencyBackup() {
+            try {
+                const backupData = {
+                    timestamp: Date.now(),
+                    auditorName: document.getElementById('auditorName').value,
+                    locationType: document.getElementById('locationType').value,
+                    location: document.getElementById('locationType').value === 'own' 
+                        ? document.getElementById('ownBusiness').value 
+                        : document.getElementById('competitor').value,
+                    questions: auditData.questions,
+                    customTitles: auditData.customTitles,
+                    ratings: auditData.ratings,
+                    customRatingTitles: auditData.customRatingTitles,
+                    // Bilder sind zu groß für sessionStorage - nur Anzahl speichern
+                    imageCount: Object.keys(auditData.images).reduce((sum, key) => {
+                        return sum + (auditData.images[key] ? auditData.images[key].length : 0);
+                    }, 0)
+                };
+                
+                sessionStorage.setItem('budni_emergency_backup', JSON.stringify(backupData));
+                console.log('💾 Notfall-Backup erstellt');
+            } catch (e) {
+                console.warn('❌ Notfall-Backup fehlgeschlagen:', e);
+            }
+        }
+
+        // Schnelles Backup bei Tab-Wechsel
+        function createQuickBackup() {
+            if (Math.random() < 0.1) { // Nur alle 10 Tab-Wechsel
+                createEmergencyBackup();
+            }
+        }
+
+        // Überprüfe Recovery-Daten beim Start
+        function checkForRecoveryData() {
+            try {
+                const backup = sessionStorage.getItem('budni_emergency_backup');
+                if (backup && !hasUserData()) {
+                    const data = JSON.parse(backup);
+                    const age = Date.now() - data.timestamp;
+                    
+                    if (age < 3600000) { // Weniger als 1 Stunde alt
+                        const recover = confirm(
+                            '🔄 Wiederherstellung verfügbar\n\n' +
+                            'Aktion: Backup von vor ' + Math.round(age/60000) + ' Min gefunden\n' +
+                            'Inhalt: ' + data.auditorName + ' - ' + data.location + '\n\n' +
+                            'Daten wiederherstellen?'
+                        );
+                        
+                        if (recover) {
+                            restoreFromBackup(data);
+                        } else {
+                            sessionStorage.removeItem('budni_emergency_backup');
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('❌ Recovery-Check fehlgeschlagen:', e);
+            }
+        }
+
+        // Wiederherstellen aus Backup
+        function restoreFromBackup(data) {
+            try {
+                document.getElementById('auditorName').value = data.auditorName || '';
+                document.getElementById('locationType').value = data.locationType || '';
+                
+                if (data.locationType === 'own') {
+                    document.getElementById('ownBusiness').value = data.location || '';
+                    document.getElementById('ownBusinessSection').style.display = 'block';
+                } else if (data.locationType === 'competitor') {
+                    document.getElementById('competitor').value = data.location || '';
+                    document.getElementById('competitorSection').style.display = 'block';
+                }
+                
+                auditData.questions = data.questions || {};
+                auditData.customTitles = data.customTitles || {};
+                auditData.ratings = data.ratings || {};
+                auditData.customRatingTitles = data.customRatingTitles || {};
+                
+                alert('✅ Backup wiederhergestellt!\n\n' + 
+                      'Hinweis: Bilder konnten nicht wiederhergestellt werden.\n' +
+                      'Vorher: ' + data.imageCount + ' Bilder');
+                
+                sessionStorage.removeItem('budni_emergency_backup');
+                
+            } catch (e) {
+                console.error('❌ Wiederherstellung fehlgeschlagen:', e);
+                alert('❌ Wiederherstellung fehlgeschlagen');
+            }
+        }
+
+        // Erkenne unerwartete Reloads
+        function detectUnexpectedReload() {
+            if (window.performance && window.performance.navigation.type === 1) {
+                console.warn('⚠️ Unerwarteter Reload erkannt');
+                
+                setTimeout(() => {
+                    if (!hasUserData()) {
+                        checkForRecoveryData();
+                    }
+                }, 500);
+            }
+        }
+
+        // Prüfe Daten-Integrität nach Browser-Events
+        function checkDataIntegrity() {
+            const currentDataCount = Object.keys(auditData.questions).length + 
+                                   Object.keys(auditData.ratings).length +
+                                   Object.keys(auditData.images).length;
+            
+            if (currentDataCount === 0 && sessionStorage.getItem('budni_emergency_backup')) {
+                console.log('🔍 Daten-Integrität: Möglicherweise Datenverlust erkannt');
+                setTimeout(checkForRecoveryData, 1000);
+            }
+        }
+
+        // Schlage Daten-Export vor bei kritischen Situationen
+        function suggestDataExport(reason) {
+            if (Math.random() < 0.3) { // Nur gelegentlich, um nicht zu nerven
+                const shouldExport = confirm(
+                    '💾 Sicherheitshinweis\n\n' +
+                    'Aktion: ' + reason + '\n' +
+                    'Empfehlung: Feedback jetzt exportieren\n\n' +
+                    'Zum Export-Bereich springen?'
+                );
+                
+                if (shouldExport) {
+                    const reportButton = document.querySelector('.btn.btn-success');
+                    if (reportButton) {
+                        reportButton.scrollIntoView({ behavior: 'smooth' });
+                        reportButton.style.boxShadow = '0 0 20px #28a745';
+                        setTimeout(() => {
+                            reportButton.style.boxShadow = '';
+                        }, 5000);
+                    }
+                }
+            }
         }
 
         // Schutz vor automatischem Neuladen bei Netzwerkwechsel
@@ -3852,24 +4088,20 @@ Erstellt: ${new Date().toLocaleString('de-DE')}
                     clearTimeout(networkChangeTimeout);
                     networkChangeTimeout = setTimeout(() => {
                         const confirmed = confirm(
-                            '🌐 Netzwerkverbindung wiederhergestellt!\n\n' +
-                            'Ihr Browser möchte möglicherweise die Seite neu laden.\n' +
-                            'Sie haben ungespeicherte Feedback-Daten.\n\n' +
-                            '🔄 Seite jetzt neu laden?\n' +
-                            '(Alle Daten gehen verloren)\n\n' +
-                            'ODER\n\n' +
-                            '💾 Weiterarbeiten?\n' +
-                            '(Daten bleiben erhalten, exportieren Sie bald!)'
+                            '🌐 Internet wieder verfügbar\n\n' +
+                            'Aktion: Browser möchte Seite neu laden\n' +
+                            'Folge: Alle Feedback-Daten gehen verloren\n\n' +
+                            'Seite jetzt neu laden?'
                         );
                         
                         if (confirmed) {
                             window.onbeforeunload = null;
                             location.reload();
                         } else {
-                            // User möchte weiterarbeiten - zusätzliche Warnung
+                            // User möchte weiterarbeiten - kurzer Tipp
                             setTimeout(() => {
                                 if (hasUserData()) {
-                                    alert('💡 Tipp: Speichern Sie Ihr Feedback bald!\n\nVerwenden Sie "📊 Feedback erstellen" und dann\n"📱 Teilen" oder "💾 Als ZIP herunterladen"\num Datenverlust zu vermeiden.');
+                                    alert('💡 Tipp: Exportieren Sie Ihr Feedback bald zur Sicherheit!');
                                 }
                             }, 2000);
                         }
@@ -3881,7 +4113,7 @@ Erstellt: ${new Date().toLocaleString('de-DE')}
             window.addEventListener('offline', function() {
                 wasOffline = true;
                 if (hasUserData()) {
-                    alert('📡 Netzwerkverbindung unterbrochen!\n\n📝 Ihre Feedback-Daten bleiben erhalten.\n💾 Speichern Sie bei Gelegenheit, sobald Sie wieder online sind.');
+                    alert('📡 Internet unterbrochen\n\nIhre Daten bleiben erhalten.\nExportieren Sie bei Gelegenheit.');
                 }
             });
 
@@ -3910,11 +4142,10 @@ Erstellt: ${new Date().toLocaleString('de-DE')}
                         const networkChangeTimeout = setTimeout(() => {
                             if (hasUserData()) {
                                 const userChoice = confirm(
-                                    '📶 Netzwerkänderung erkannt!\n\n' +
-                                    `Neue Verbindung: ${connection.effectiveType}\n` +
-                                    'Geschwindigkeit: ' + connection.downlink + ' Mbps\n\n' +
-                                    'Manche Browser laden bei Netzwerkwechsel automatisch neu.\n\n' +
-                                    '💾 Möchten Sie Ihr Feedback jetzt sicherheitshalber exportieren?'
+                                    '📶 Netzwerk gewechselt\n\n' +
+                                    'Aktion: WLAN/Mobile-Wechsel erkannt\n' +
+                                    'Risiko: Browser könnte Seite neu laden\n\n' +
+                                    'Feedback jetzt sicherheitshalber exportieren?'
                                 );
                                 
                                 if (userChoice) {
