@@ -1700,6 +1700,292 @@
             customRatingTitles: {}
         };
 
+        // Automatisches Speichersystem
+        const STORAGE_KEY = 'budni_feedback_data';
+        let autoSaveEnabled = true;
+        let dataSuccessfullyExported = false;
+
+        // Automatisch alle Daten speichern
+        function autoSaveData() {
+            if (!autoSaveEnabled) return;
+            
+            try {
+                // Alle Formulardaten sammeln
+                const formData = {
+                    // Basis-Formulardaten
+                    auditorName: document.getElementById('auditorName').value.trim(),
+                    auditDate: document.getElementById('auditDate').value,
+                    auditTime: document.getElementById('auditTime').value,
+                    locationType: document.getElementById('locationType').value,
+                    ownBusiness: document.getElementById('ownBusiness').value,
+                    competitor: document.getElementById('competitor').value,
+                    
+                    // Fragen und Antworten
+                    questions: {},
+                    
+                    // Audit-Daten
+                    images: auditData.images,
+                    customTitles: auditData.customTitles,
+                    ratings: auditData.ratings,
+                    customRatingTitles: auditData.customRatingTitles,
+                    
+                    // Meta-Daten
+                    questionCounter: questionCounter,
+                    ratingCounter: ratingCounter,
+                    timestamp: Date.now(),
+                    version: '1.0'
+                };
+                
+                // Alle Textfragen sammeln
+                const questionElements = document.querySelectorAll('.question-item');
+                questionElements.forEach(element => {
+                    const questionId = element.getAttribute('data-question');
+                    const textarea = element.querySelector('textarea');
+                    if (textarea) {
+                        formData.questions[questionId] = textarea.value.trim();
+                    }
+                });
+                
+                // In localStorage speichern (funktioniert nicht in Claude.ai Artifacts)
+                if (typeof Storage !== 'undefined') {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
+                    console.log('💾 Daten automatisch gespeichert', new Date().toLocaleTimeString());
+                } else {
+                    console.warn('⚠️ localStorage nicht verfügbar - läuft in Claude.ai Artifact');
+                }
+                
+            } catch (error) {
+                console.error('❌ Auto-Save fehlgeschlagen:', error);
+            }
+        }
+
+        // Daten automatisch laden beim Seitenstart
+        function autoLoadData() {
+            try {
+                if (typeof Storage === 'undefined') {
+                    console.log('ℹ️ localStorage nicht verfügbar - keine gespeicherten Daten geladen');
+                    return false;
+                }
+                
+                const savedData = localStorage.getItem(STORAGE_KEY);
+                if (!savedData) {
+                    console.log('ℹ️ Keine gespeicherten Daten gefunden');
+                    return false;
+                }
+                
+                const data = JSON.parse(savedData);
+                const dataAge = Date.now() - (data.timestamp || 0);
+                
+                // Daten sind älter als 7 Tage - verwerfen
+                if (dataAge > 7 * 24 * 60 * 60 * 1000) {
+                    localStorage.removeItem(STORAGE_KEY);
+                    console.log('🗑️ Alte Daten entfernt (älter als 7 Tage)');
+                    return false;
+                }
+                
+                console.log('📥 Gespeicherte Daten gefunden, lade...');
+                
+                // Basis-Formulardaten wiederherstellen
+                if (data.auditorName) document.getElementById('auditorName').value = data.auditorName;
+                if (data.auditDate) document.getElementById('auditDate').value = data.auditDate;
+                if (data.auditTime) document.getElementById('auditTime').value = data.auditTime;
+                if (data.locationType) {
+                    document.getElementById('locationType').value = data.locationType;
+                    toggleLocationDetails(); // Zeige entsprechende Sektion
+                }
+                if (data.ownBusiness) document.getElementById('ownBusiness').value = data.ownBusiness;
+                if (data.competitor) document.getElementById('competitor').value = data.competitor;
+                
+                // Audit-Daten wiederherstellen
+                auditData.images = data.images || {};
+                auditData.customTitles = data.customTitles || {};
+                auditData.ratings = data.ratings || {};
+                auditData.customRatingTitles = data.customRatingTitles || {};
+                
+                // Meta-Daten wiederherstellen
+                questionCounter = data.questionCounter || 1;
+                ratingCounter = data.ratingCounter || 0;
+                
+                // Frage-Felder wiederherstellen
+                restoreQuestionFields(data.questions || {});
+                
+                // Ratings visuell wiederherstellen
+                restoreRatings();
+                
+                // Thumbnails aktualisieren
+                Object.keys(auditData.images).forEach(questionId => {
+                    updateThumbnails(questionId);
+                });
+                
+                // Erfolgs-Toast anzeigen
+                showDataLoadedToast(dataAge);
+                
+                return true;
+                
+            } catch (error) {
+                console.error('❌ Auto-Load fehlgeschlagen:', error);
+                // Bei Fehler: Korrupte Daten entfernen
+                if (typeof Storage !== 'undefined') {
+                    localStorage.removeItem(STORAGE_KEY);
+                }
+                return false;
+            }
+        }
+
+        // Frage-Felder wiederherstellen
+        function restoreQuestionFields(questions) {
+            const questionsContainer = document.getElementById('questionsContainer');
+            
+            // Bestimme die höchste Frage-ID
+            const questionIds = Object.keys(questions).map(id => parseInt(id)).filter(id => !isNaN(id));
+            const maxQuestionId = Math.max(1, ...questionIds);
+            
+            // Erstelle alle benötigten Frage-Felder
+            for (let i = 2; i <= maxQuestionId; i++) {
+                if (!document.querySelector(`[data-question="${i}"]`)) {
+                    addQuestionSilent();
+                }
+            }
+            
+            // Fülle alle Textfelder
+            Object.keys(questions).forEach(questionId => {
+                const questionElement = document.querySelector(`[data-question="${questionId}"]`);
+                if (questionElement) {
+                    const textarea = questionElement.querySelector('textarea');
+                    if (textarea && questions[questionId]) {
+                        textarea.value = questions[questionId];
+                    }
+                    
+                    // Custom Title wiederherstellen
+                    if (auditData.customTitles[questionId]) {
+                        const titleElement = questionElement.querySelector('.question-number');
+                        if (titleElement) {
+                            titleElement.textContent = auditData.customTitles[questionId];
+                        }
+                    }
+                }
+            });
+            
+            // Delete-Buttons aktualisieren
+            updateDeleteButtons();
+        }
+
+        // Ratings visuell wiederherstellen
+        function restoreRatings() {
+            Object.keys(auditData.ratings).forEach(ratingId => {
+                const rating = auditData.ratings[ratingId];
+                setRating(ratingId, rating);
+            });
+            
+            // Custom Rating Titles wiederherstellen
+            Object.keys(auditData.customRatingTitles).forEach(ratingId => {
+                const ratingElement = document.querySelector(`[data-rating="${ratingId}"]`);
+                if (ratingElement) {
+                    const titleElement = ratingElement.querySelector('.rating-label');
+                    if (titleElement) {
+                        titleElement.textContent = auditData.customRatingTitles[ratingId];
+                    }
+                }
+            });
+        }
+
+        // Toast-Nachricht für geladene Daten
+        function showDataLoadedToast(dataAge) {
+            const ageMinutes = Math.round(dataAge / (1000 * 60));
+            const ageText = ageMinutes < 60 
+                ? `vor ${ageMinutes} Min` 
+                : `vor ${Math.round(ageMinutes / 60)} Std`;
+            
+            // Erstelle Toast-Element
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+                color: white;
+                padding: 15px 20px;
+                border-radius: 12px;
+                box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+                z-index: 10000;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                font-size: 14px;
+                font-weight: 600;
+                max-width: 300px;
+                opacity: 0;
+                transform: translateX(100%);
+                transition: all 0.3s ease;
+            `;
+            
+            toast.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 18px;">💾</span>
+                    <div>
+                        <div style="font-weight: 700; margin-bottom: 2px;">Daten wiederhergestellt!</div>
+                        <div style="font-size: 12px; opacity: 0.9;">Letzter Stand: ${ageText}</div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            // Animation einblenden
+            setTimeout(() => {
+                toast.style.opacity = '1';
+                toast.style.transform = 'translateX(0)';
+            }, 100);
+            
+            // Nach 4 Sekunden ausblenden
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, 4000);
+        }
+
+        // Daten nach erfolgreichem Export löschen (nur mit Nutzer-Zustimmung)
+        function clearSavedDataAfterExport() {
+            dataSuccessfullyExported = true;
+            
+            // Kurz warten, dann fragen
+            setTimeout(() => {
+                const shouldClear = confirm(
+                    '✅ Export erfolgreich!\n\n' +
+                    '🗑️ Möchten Sie die gespeicherten Daten jetzt löschen?\n\n' +
+                    '• Ja: Startet komplett neu (empfohlen)\n' +
+                    '• Nein: Daten bleiben für weitere Bearbeitung erhalten'
+                );
+                
+                if (shouldClear) {
+                    clearAllSavedData();
+                    resetFormSilent();
+                } else {
+                    // Daten behalten, aber Flag zurücksetzen
+                    dataSuccessfullyExported = false;
+                }
+            }, 500);
+        }
+
+        // Alle gespeicherten Daten löschen
+        function clearAllSavedData() {
+            try {
+                if (typeof Storage !== 'undefined') {
+                    localStorage.removeItem(STORAGE_KEY);
+                    console.log('🗑️ Alle gespeicherten Daten gelöscht');
+                }
+                
+                // Session Storage auch leeren
+                if (typeof sessionStorage !== 'undefined') {
+                    sessionStorage.removeItem('budni_emergency_backup');
+                }
+                
+            } catch (error) {
+                console.error('❌ Fehler beim Löschen der Daten:', error);
+            }
+        }
+
         // Dropdown-Funktionalität für Thementitel
         function toggleThemeDropdown(questionId) {
             const dropdown = document.querySelector(`#dropdown-${questionId}`).parentElement;
@@ -1860,7 +2146,7 @@
                         </div>
                         <div class="form-group">
                             <label>📝 Ihre Beobachtung:</label>
-                            <textarea placeholder="Beschreiben Sie hier Ihre Beobachtungen, Auffälligkeiten oder Verbesserungsvorschläge..." oninput="checkForAutoAddQuestion(${questionCounter})"></textarea>
+                            <textarea placeholder="Beschreiben Sie hier Ihre Beobachtungen, Auffälligkeiten oder Verbesserungsvorschläge..." oninput="checkForAutoAddQuestion(${questionCounter}); autoSaveData();"></textarea>
                         </div>
                         <input type="file" class="file-input" accept="image/*" multiple onchange="handleFileUpload(${questionCounter}, this)">
                         <div class="thumbnails"></div>
@@ -1979,6 +2265,9 @@
             // Alle Dropdown-Menüs aktualisieren
             updateAllDropdowns();
             
+            // Auto-Save
+            autoSaveData();
+            
             alert(`✅ Neue Bewertungskategorie "${categoryName.trim()}" wurde hinzugefügt!`);
         }
 
@@ -2023,6 +2312,9 @@
 
             ownSection.style.display = locationType === 'own' ? 'block' : 'none';
             competitorSection.style.display = locationType === 'competitor' ? 'block' : 'none';
+            
+            // Auto-Save
+            autoSaveData();
         }
 
         function editTitle(questionId) {
@@ -2036,6 +2328,9 @@
                 const questionElement = document.querySelector(`[data-question="${questionId}"]`);
                 const titleElement = questionElement.querySelector('.question-number');
                 titleElement.textContent = newTitle.trim();
+                
+                // Auto-Save
+                autoSaveData();
             }
         }
 
@@ -2065,6 +2360,9 @@
                 const ratingElement = document.querySelector(`[data-rating="${ratingId}"]`);
                 const titleElement = ratingElement.querySelector('.rating-label');
                 titleElement.textContent = newTitle.trim();
+                
+                // Auto-Save
+                autoSaveData();
             }
         }
 
@@ -2097,6 +2395,9 @@
             };
             ratingText.textContent = ratingLabels[value];
             ratingText.style.color = value >= 4 ? '#28a745' : value >= 3 ? '#ffc107' : '#dc3545';
+            
+            // Auto-Save
+            autoSaveData();
         }
 
         function deleteRating(ratingId) {
@@ -2105,6 +2406,9 @@
                 ratingItem.remove();
                 delete auditData.ratings[ratingId];
                 delete auditData.customRatingTitles[ratingId];
+                
+                // Auto-Save
+                autoSaveData();
             }
         }
 
@@ -2132,7 +2436,7 @@
                     </div>
                     <div class="form-group">
                         <label>📝 Ihre Beobachtung:</label>
-                        <textarea placeholder="Beschreiben Sie hier Ihre Beobachtungen, Auffälligkeiten oder Verbesserungsvorschläge..." oninput="checkForAutoAddQuestion(${questionCounter})"></textarea>
+                        <textarea placeholder="Beschreiben Sie hier Ihre Beobachtungen, Auffälligkeiten oder Verbesserungsvorschläge..." oninput="checkForAutoAddQuestion(${questionCounter}); autoSaveData();"></textarea>
                     </div>
                     <input type="file" class="file-input" accept="image/*" multiple onchange="handleFileUpload(${questionCounter}, this)">
                     <div class="thumbnails"></div>
@@ -2147,6 +2451,9 @@
             // Scroll to new question
             const newQuestion = container.lastElementChild;
             newQuestion.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Auto-Save
+            autoSaveData();
         }
 
         function deleteQuestion(questionId) {
@@ -2157,6 +2464,9 @@
                 delete auditData.images[questionId];
                 delete auditData.customTitles[questionId];
                 updateDeleteButtons();
+                
+                // Auto-Save
+                autoSaveData();
             }
         }
 
@@ -2193,6 +2503,9 @@
                         
                         // Prüfen ob automatisch neues Themenfeld hinzugefügt werden soll
                         checkForAutoAddQuestion(questionId);
+                        
+                        // Auto-Save
+                        autoSaveData();
                     };
                     reader.readAsDataURL(compressedFile);
                 });
@@ -2289,6 +2602,9 @@
             if (auditData.images[questionId]) {
                 auditData.images[questionId].splice(imageIndex, 1);
                 updateThumbnails(questionId);
+                
+                // Auto-Save
+                autoSaveData();
             }
         }
 
@@ -2383,6 +2699,22 @@
             // Show report view
             document.getElementById('auditForm').style.display = 'none';
             document.getElementById('reportView').style.display = 'block';
+            
+            // Nach erfolgreichem Report: Schutz temporär lockern (Report-Ansicht ist sicher)
+            window.onbeforeunload = function(event) {
+                // Nur warnen wenn User zurück zum Formular geht
+                const reportView = document.getElementById('reportView');
+                if (reportView.style.display === 'block') {
+                    return; // Keine Warnung in Report-Ansicht
+                }
+                
+                if (hasUserData()) {
+                    const message = '⚠️ Seite verlassen?\n\nAlle Feedback-Daten gehen verloren!';
+                    event.preventDefault();
+                    event.returnValue = message;
+                    return message;
+                }
+            };
         }
 
         function createReport(auditorName, auditDate, auditTime, locationType, location) {
@@ -2520,6 +2852,9 @@
         function backToForm() {
             document.getElementById('reportView').style.display = 'none';
             document.getElementById('auditForm').style.display = 'block';
+            
+            // Schutz wieder vollständig aktivieren beim Zurück zum Formular
+            setupPageProtection();
         }
 
         function resetForm() {
@@ -2532,6 +2867,10 @@
 
             // Schutz temporär deaktivieren für gewollten Reset
             window.onbeforeunload = null;
+            dataSuccessfullyExported = false;
+
+            // Alle gespeicherten Daten löschen
+            clearAllSavedData();
 
             // Alle Daten zurücksetzen
             auditData = {
@@ -2585,7 +2924,7 @@
                     </div>
                     <div class="form-group">
                         <label>📝 Ihre Beobachtung:</label>
-                        <textarea placeholder="Beschreiben Sie hier Ihre Beobachtungen, Auffälligkeiten oder Verbesserungsvorschläge..." oninput="checkForAutoAddQuestion(1)"></textarea>
+                        <textarea placeholder="Beschreiben Sie hier Ihre Beobachtungen, Auffälligkeiten oder Verbesserungsvorschläge..." oninput="checkForAutoAddQuestion(1); autoSaveData();"></textarea>
                     </div>
                     <input type="file" class="file-input" accept="image/*" multiple onchange="handleFileUpload(1, this)">
                     <div class="thumbnails"></div>
@@ -2631,6 +2970,9 @@
             // Zurück zum Formular wechseln (falls man im Report war)
             document.getElementById('reportView').style.display = 'none';
             document.getElementById('auditForm').style.display = 'block';
+
+            // Auto-Save Event Listener neu einrichten
+            setupAutoSaveListeners();
 
             // Schutz wieder aktivieren nach Reset
             setTimeout(() => {
@@ -2817,17 +3159,15 @@
                 // Try to share
                 await shareFile(blob, 'text/html', filename);
                 
-                // Nach erfolgreichem Teilen: Neues Feedback anbieten
-                setTimeout(() => {
-                    promptForNewFeedback('Nach dem Teilen');
-                }, 1000);
+                // Nach erfolgreichem Teilen: Daten-Löschung anbieten
+                clearSavedDataAfterExport();
                 
             } catch (error) {
                 console.error('Share Error:', error);
                 // Fallback to mailto
                 emailReport();
                 
-                // Auch bei Fehler: Neues Feedback anbieten
+                // Auch bei Fehler: Neues Feedback anbieten (aber keine Datenlöschung)
                 setTimeout(() => {
                     promptForNewFeedback('Nach dem Export-Versuch');
                 }, 1000);
@@ -2933,10 +3273,8 @@ Erstellt: ${new Date().toLocaleString('de-DE')}
                 const fileSizeMB = (zipBlob.size / 1024 / 1024).toFixed(2);
                 alert(`✅ ZIP-Datei erstellt (${fileSizeMB} MB)\n\n📄 HTML: Seitenverhältnis beibehalten, druckerfreundlich\n🖼️ Bilder: Original-Qualität im separaten Ordner\n📝 Anleitung: Erklärt den Inhalt`);
                 
-                // Nach erfolgreichem Download: Neues Feedback anbieten
-                setTimeout(() => {
-                    promptForNewFeedback('Nach dem Download');
-                }, 1500);
+                // Nach erfolgreichem Download: Daten-Löschung anbieten
+                clearSavedDataAfterExport();
                 
             } catch (error) {
                 console.error('ZIP Error:', error);
@@ -3765,6 +4103,16 @@ Erstellt: ${new Date().toLocaleString('de-DE')}
             document.getElementById('auditDate').value = today;
             document.getElementById('auditTime').value = currentTime;
             
+            // Versuche gespeicherte Daten zu laden
+            const dataLoaded = autoLoadData();
+            
+            if (!dataLoaded) {
+                console.log('ℹ️ Keine gespeicherten Daten gefunden - starte mit leerer Form');
+            }
+            
+            // Event Listener für Auto-Save auf Basis-Formularfelder
+            setupAutoSaveListeners();
+            
             // Check available features
             checkExportFeatures();
             
@@ -3772,12 +4120,29 @@ Erstellt: ${new Date().toLocaleString('de-DE')}
             setupPageProtection();
         });
 
+        // Event Listener für automatisches Speichern einrichten
+        function setupAutoSaveListeners() {
+            // Basis-Formularfelder
+            document.getElementById('auditorName').addEventListener('input', autoSaveData);
+            document.getElementById('auditDate').addEventListener('change', autoSaveData);
+            document.getElementById('auditTime').addEventListener('change', autoSaveData);
+            document.getElementById('locationType').addEventListener('change', autoSaveData);
+            document.getElementById('ownBusiness').addEventListener('change', autoSaveData);
+            document.getElementById('competitor').addEventListener('change', autoSaveData);
+            
+            // Textareas der ersten Frage (weitere werden dynamisch hinzugefügt)
+            const firstTextarea = document.querySelector('.question-item textarea');
+            if (firstTextarea) {
+                firstTextarea.addEventListener('input', autoSaveData);
+            }
+        }
+
         // Schutz vor ungewollter Seitenaktualisierung
         function setupPageProtection() {
-            // Warnung bei Verlassen der Seite wenn Daten eingegeben wurden
+            // Warnung bei Verlassen der Seite wenn Daten eingegeben wurden (aber nicht erfolgreich exportiert)
             window.addEventListener('beforeunload', function(event) {
-                if (hasUserData()) {
-                    const message = 'Sie haben ungespeicherte Änderungen. Möchten Sie die Seite wirklich verlassen?';
+                if (hasUserData() && !dataSuccessfullyExported) {
+                    const message = '⚠️ Seite verlassen?\n\nAlle Feedback-Daten gehen verloren!';
                     event.preventDefault();
                     event.returnValue = message; // Standard für die meisten Browser
                     return message; // Für ältere Browser
@@ -3799,12 +4164,13 @@ Erstellt: ${new Date().toLocaleString('de-DE')}
                     (event.ctrlKey && event.key === 'r') || 
                     (event.metaKey && event.key === 'r')) {
                     
-                    if (hasUserData()) {
+                    if (hasUserData() && !dataSuccessfullyExported) {
                         event.preventDefault();
                         const confirmed = confirm(
                             '🔄 Seite aktualisieren?\n\n' +
-                            'Alle eingegebenen Daten gehen verloren.\n' +
-                            'Möchten Sie wirklich fortfahren?'
+                            'Aktion: F5/Strg+R gedrückt\n' +
+                            'Folge: Alle Feedback-Daten gehen verloren\n\n' +
+                            'Trotzdem fortfahren?'
                         );
                         
                         if (confirmed) {
@@ -3815,6 +4181,348 @@ Erstellt: ${new Date().toLocaleString('de-DE')}
                     }
                 }
             });
+
+            // Netzwerkwechsel-Schutz
+            setupNetworkProtection();
+            
+            // Zusätzliche Browser-spezifische Schutzmaßnahmen
+            setupAdvancedProtection();
+        }
+
+        // Erweiterte Schutzmaßnahmen für spezielle Browser-Situationen
+        function setupAdvancedProtection() {
+            // 1. Mobile Browser Tab-Discarding Detection
+            if ('onfreeze' in document) {
+                document.addEventListener('freeze', function() {
+                    if (hasUserData()) {
+                        console.warn('⚠️ Tab wird eingefroren - Daten könnten verloren gehen');
+                        // Notfall-Backup erstellen
+                        createEmergencyBackup();
+                    }
+                });
+
+                document.addEventListener('resume', function() {
+                    console.log('📱 Tab wieder aktiv - prüfe Daten-Integrität');
+                    checkDataIntegrity();
+                });
+            }
+
+            // 2. Memory Pressure Detection (experimentell)
+            if ('memory' in performance) {
+                setInterval(() => {
+                    if (performance.memory.usedJSHeapSize > performance.memory.jsHeapSizeLimit * 0.9) {
+                        if (hasUserData()) {
+                            console.warn('⚠️ Speicher fast voll - Browser könnte Tab neu laden');
+                            suggestDataExport('Speicher wird knapp');
+                        }
+                    }
+                }, 30000); // Alle 30 Sekunden prüfen
+            }
+
+            // 3. Page Visibility - erweiterte Tab-Wechsel Erkennung
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) {
+                    // Tab wird versteckt - könnte entladen werden
+                    if (hasUserData()) {
+                        createQuickBackup();
+                    }
+                } else {
+                    // Tab wieder sichtbar
+                    setTimeout(() => {
+                        if (hasUserData()) {
+                            detectUnexpectedReload();
+                        }
+                    }, 100);
+                }
+            });
+
+            // 4. Browser-Crash Recovery Detection
+            if (window.performance && window.performance.navigation) {
+                if (window.performance.navigation.type === 1) {
+                    // Seite wurde per reload geöffnet
+                    setTimeout(() => {
+                        checkForRecoveryData();
+                    }, 1000);
+                }
+            }
+
+            // 5. Developer Tools Detection (können Reloads verursachen)
+            let devtools = {open: false, orientation: null};
+            setInterval(() => {
+                if (window.outerHeight - window.innerHeight > 160 || 
+                    window.outerWidth - window.innerWidth > 160) {
+                    if (!devtools.open && hasUserData()) {
+                        console.log('🔧 DevTools geöffnet - könnte Reload verursachen');
+                        devtools.open = true;
+                    }
+                } else {
+                    devtools.open = false;
+                }
+            }, 2000);
+
+            // 6. Unload-Events die beforeunload umgehen
+            window.addEventListener('pagehide', function(event) {
+                if (hasUserData()) {
+                    console.warn('⚠️ Seite wird versteckt - letzter Backup-Versuch');
+                    createEmergencyBackup();
+                }
+            });
+
+            // 7. Mobile-spezifische Events
+            if ('orientation' in window) {
+                window.addEventListener('orientationchange', function() {
+                    if (hasUserData()) {
+                        setTimeout(() => {
+                            checkDataIntegrity();
+                        }, 1000);
+                    }
+                });
+            }
+        }
+
+        // Notfall-Backup in Browser-Session Storage
+        function createEmergencyBackup() {
+            try {
+                const backupData = {
+                    timestamp: Date.now(),
+                    auditorName: document.getElementById('auditorName').value,
+                    locationType: document.getElementById('locationType').value,
+                    location: document.getElementById('locationType').value === 'own' 
+                        ? document.getElementById('ownBusiness').value 
+                        : document.getElementById('competitor').value,
+                    questions: auditData.questions,
+                    customTitles: auditData.customTitles,
+                    ratings: auditData.ratings,
+                    customRatingTitles: auditData.customRatingTitles,
+                    // Bilder sind zu groß für sessionStorage - nur Anzahl speichern
+                    imageCount: Object.keys(auditData.images).reduce((sum, key) => {
+                        return sum + (auditData.images[key] ? auditData.images[key].length : 0);
+                    }, 0)
+                };
+                
+                sessionStorage.setItem('budni_emergency_backup', JSON.stringify(backupData));
+                console.log('💾 Notfall-Backup erstellt');
+            } catch (e) {
+                console.warn('❌ Notfall-Backup fehlgeschlagen:', e);
+            }
+        }
+
+        // Schnelles Backup bei Tab-Wechsel
+        function createQuickBackup() {
+            if (Math.random() < 0.1) { // Nur alle 10 Tab-Wechsel
+                createEmergencyBackup();
+            }
+        }
+
+        // Überprüfe Recovery-Daten beim Start
+        function checkForRecoveryData() {
+            try {
+                const backup = sessionStorage.getItem('budni_emergency_backup');
+                if (backup && !hasUserData()) {
+                    const data = JSON.parse(backup);
+                    const age = Date.now() - data.timestamp;
+                    
+                    if (age < 3600000) { // Weniger als 1 Stunde alt
+                        const recover = confirm(
+                            '🔄 Wiederherstellung verfügbar\n\n' +
+                            'Aktion: Backup von vor ' + Math.round(age/60000) + ' Min gefunden\n' +
+                            'Inhalt: ' + data.auditorName + ' - ' + data.location + '\n\n' +
+                            'Daten wiederherstellen?'
+                        );
+                        
+                        if (recover) {
+                            restoreFromBackup(data);
+                        } else {
+                            sessionStorage.removeItem('budni_emergency_backup');
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('❌ Recovery-Check fehlgeschlagen:', e);
+            }
+        }
+
+        // Wiederherstellen aus Backup
+        function restoreFromBackup(data) {
+            try {
+                document.getElementById('auditorName').value = data.auditorName || '';
+                document.getElementById('locationType').value = data.locationType || '';
+                
+                if (data.locationType === 'own') {
+                    document.getElementById('ownBusiness').value = data.location || '';
+                    document.getElementById('ownBusinessSection').style.display = 'block';
+                } else if (data.locationType === 'competitor') {
+                    document.getElementById('competitor').value = data.location || '';
+                    document.getElementById('competitorSection').style.display = 'block';
+                }
+                
+                auditData.questions = data.questions || {};
+                auditData.customTitles = data.customTitles || {};
+                auditData.ratings = data.ratings || {};
+                auditData.customRatingTitles = data.customRatingTitles || {};
+                
+                alert('✅ Backup wiederhergestellt!\n\n' + 
+                      'Hinweis: Bilder konnten nicht wiederhergestellt werden.\n' +
+                      'Vorher: ' + data.imageCount + ' Bilder');
+                
+                sessionStorage.removeItem('budni_emergency_backup');
+                
+            } catch (e) {
+                console.error('❌ Wiederherstellung fehlgeschlagen:', e);
+                alert('❌ Wiederherstellung fehlgeschlagen');
+            }
+        }
+
+        // Erkenne unerwartete Reloads
+        function detectUnexpectedReload() {
+            if (window.performance && window.performance.navigation.type === 1) {
+                console.warn('⚠️ Unerwarteter Reload erkannt');
+                
+                setTimeout(() => {
+                    if (!hasUserData()) {
+                        checkForRecoveryData();
+                    }
+                }, 500);
+            }
+        }
+
+        // Prüfe Daten-Integrität nach Browser-Events
+        function checkDataIntegrity() {
+            const currentDataCount = Object.keys(auditData.questions).length + 
+                                   Object.keys(auditData.ratings).length +
+                                   Object.keys(auditData.images).length;
+            
+            if (currentDataCount === 0 && sessionStorage.getItem('budni_emergency_backup')) {
+                console.log('🔍 Daten-Integrität: Möglicherweise Datenverlust erkannt');
+                setTimeout(checkForRecoveryData, 1000);
+            }
+        }
+
+        // Schlage Daten-Export vor bei kritischen Situationen
+        function suggestDataExport(reason) {
+            if (Math.random() < 0.3) { // Nur gelegentlich, um nicht zu nerven
+                const shouldExport = confirm(
+                    '💾 Sicherheitshinweis\n\n' +
+                    'Aktion: ' + reason + '\n' +
+                    'Empfehlung: Feedback jetzt exportieren\n\n' +
+                    'Zum Export-Bereich springen?'
+                );
+                
+                if (shouldExport) {
+                    const reportButton = document.querySelector('.btn.btn-success');
+                    if (reportButton) {
+                        reportButton.scrollIntoView({ behavior: 'smooth' });
+                        reportButton.style.boxShadow = '0 0 20px #28a745';
+                        setTimeout(() => {
+                            reportButton.style.boxShadow = '';
+                        }, 5000);
+                    }
+                }
+            }
+        }
+
+        // Schutz vor automatischem Neuladen bei Netzwerkwechsel
+        function setupNetworkProtection() {
+            let wasOffline = false;
+            let networkChangeTimeout = null;
+
+            // Online/Offline Events
+            window.addEventListener('online', function() {
+                if (wasOffline && hasUserData()) {
+                    clearTimeout(networkChangeTimeout);
+                    networkChangeTimeout = setTimeout(() => {
+                        const confirmed = confirm(
+                            '🌐 Internet wieder verfügbar\n\n' +
+                            'Aktion: Browser möchte Seite neu laden\n' +
+                            'Folge: Alle Feedback-Daten gehen verloren\n\n' +
+                            'Seite jetzt neu laden?'
+                        );
+                        
+                        if (confirmed) {
+                            window.onbeforeunload = null;
+                            location.reload();
+                        } else {
+                            // User möchte weiterarbeiten - kurzer Tipp
+                            setTimeout(() => {
+                                if (hasUserData()) {
+                                    alert('💡 Tipp: Exportieren Sie Ihr Feedback bald zur Sicherheit!');
+                                }
+                            }, 2000);
+                        }
+                    }, 1000); // 1 Sekunde warten nach Verbindung
+                }
+                wasOffline = false;
+            });
+
+            window.addEventListener('offline', function() {
+                wasOffline = true;
+                if (hasUserData()) {
+                    alert('📡 Internet unterbrochen\n\nIhre Daten bleiben erhalten.\nExportieren Sie bei Gelegenheit.');
+                }
+            });
+
+            // Sichtbarkeitsänderung (Tab-Wechsel) - manchmal triggert Browser hier Reloads
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden && hasUserData()) {
+                    // Tab wieder sichtbar - kurz prüfen ob Browser reload versucht
+                    setTimeout(() => {
+                        if (window.performance && window.performance.navigation.type === 1) {
+                            // Seite wurde reload - zu spät, aber für Debug
+                            console.warn('Unerwarteter Seitenreload nach Tab-Wechsel erkannt');
+                        }
+                    }, 100);
+                }
+            });
+
+            // Connection API falls verfügbar (experimentell)
+            if ('connection' in navigator) {
+                const connection = navigator.connection;
+                
+                connection.addEventListener('change', function() {
+                    if (hasUserData()) {
+                        console.log(`Netzwerk geändert: ${connection.effectiveType} (${connection.downlink} Mbps)`);
+                        
+                        // Bei größeren Netzwerkänderungen warnen
+                        const networkChangeTimeout = setTimeout(() => {
+                            if (hasUserData()) {
+                                const userChoice = confirm(
+                                    '📶 Netzwerk gewechselt\n\n' +
+                                    'Aktion: WLAN/Mobile-Wechsel erkannt\n' +
+                                    'Risiko: Browser könnte Seite neu laden\n\n' +
+                                    'Feedback jetzt sicherheitshalber exportieren?'
+                                );
+                                
+                                if (userChoice) {
+                                    // Scroll zum Export-Bereich
+                                    const reportButton = document.querySelector('.btn.btn-success');
+                                    if (reportButton) {
+                                        reportButton.scrollIntoView({ behavior: 'smooth' });
+                                        reportButton.style.animation = 'pulse 2s infinite';
+                                        setTimeout(() => {
+                                            reportButton.style.animation = '';
+                                        }, 6000);
+                                    }
+                                }
+                            }
+                        }, 2000);
+                    }
+                });
+            }
+
+            // Page Freeze API (für moderne Browser)
+            if ('onfreeze' in document) {
+                document.addEventListener('freeze', function(event) {
+                    if (hasUserData()) {
+                        console.log('Seite wird eingefroren - Daten könnten gefährdet sein');
+                    }
+                });
+
+                document.addEventListener('resume', function(event) {
+                    if (hasUserData()) {
+                        console.log('Seite wieder aktiv - Daten prüfen');
+                    }
+                });
+            }
         }
 
         // Prüfe ob User bereits Daten eingegeben hat
