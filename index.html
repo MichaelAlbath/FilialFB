@@ -1479,7 +1479,10 @@
         // Auto-Save System
         let saveTimeout = null;
         let isRestoring = false; // Flag to prevent auto-save during restore
+        let saveQueue = []; // Queue for pending saves
+        let isSaving = false; // Flag to prevent concurrent saves
         const SAVE_DELAY = 3000; // 3 seconds
+        const IMMEDIATE_SAVE_DELAY = 500; // For critical actions
         const STORAGE_KEY = 'budni_feedback_autosave';
 
         // Initialize app
@@ -1573,26 +1576,76 @@
 
         function handleFileUploadAutoSave(event) {
             // Force immediate save after file upload with longer delay for image processing
-            clearTimeout(saveTimeout);
-            setTimeout(() => {
-                console.log('🖼️ Forcing save after file upload');
-                autoSave();
-            }, 1000);
+            queueSave('file_upload', 1000);
         }
 
         function handleRatingAutoSave(event) {
             // Force immediate save after rating
-            clearTimeout(saveTimeout);
-            setTimeout(() => {
-                console.log('⭐ Forcing save after rating');
-                autoSave();
-            }, 200);
+            queueSave('rating_change', IMMEDIATE_SAVE_DELAY);
         }
 
         function debounceAutoSave() {
             if (isRestoring) return; // Don't save during restore
+            queueSave('debounced', SAVE_DELAY);
+        }
+
+        function queueSave(reason = 'unknown', delay = SAVE_DELAY) {
+            if (isRestoring) return;
+            
+            // Add to queue
+            const saveRequest = {
+                reason: reason,
+                timestamp: Date.now(),
+                delay: delay
+            };
+            
+            saveQueue.push(saveRequest);
+            console.log(`📥 Queued save: ${reason} (queue length: ${saveQueue.length})`);
+            
+            // Process queue
+            processSaveQueue();
+        }
+
+        function processSaveQueue() {
+            if (isSaving || saveQueue.length === 0) return;
+            
+            // Clear any existing timeout
             clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(autoSave, SAVE_DELAY);
+            
+            // Get the most recent save request
+            const latestSave = saveQueue[saveQueue.length - 1];
+            
+            // Clear queue since we're processing
+            const queueLength = saveQueue.length;
+            saveQueue = [];
+            
+            console.log(`🔄 Processing ${queueLength} queued saves, executing: ${latestSave.reason}`);
+            
+            // Set new timeout for the latest save
+            saveTimeout = setTimeout(() => {
+                executeSave(latestSave.reason);
+            }, latestSave.delay);
+        }
+
+        function executeSave(reason = 'unknown') {
+            if (isRestoring || isSaving) return;
+            
+            isSaving = true;
+            console.log(`💾 Executing save: ${reason}`);
+            
+            try {
+                autoSave();
+                console.log(`✅ Save completed: ${reason}`);
+            } catch (error) {
+                console.error(`❌ Save failed: ${reason}`, error);
+            } finally {
+                isSaving = false;
+                
+                // Process any new saves that were queued during execution
+                if (saveQueue.length > 0) {
+                    setTimeout(() => processSaveQueue(), 100);
+                }
+            }
         }
 
         function autoSave() {
@@ -2160,8 +2213,8 @@
             
             document.querySelectorAll('.theme-dropdown').forEach(d => d.classList.remove('show'));
             
-            // Auto-save
-            debounceAutoSave();
+            // Queue save
+            queueSave('theme_selected', IMMEDIATE_SAVE_DELAY);
         }
 
         function editTitle(questionId) {
@@ -2301,11 +2354,8 @@
             newQuestion.scrollIntoView({ behavior: 'smooth', block: 'center' });
             
             // Force save after adding question
-            console.log('➕ Question added, forcing save');
-            clearTimeout(saveTimeout);
-            setTimeout(() => {
-                autoSave();
-            }, 200);
+            console.log('➕ Question added');
+            queueSave('question_added', IMMEDIATE_SAVE_DELAY);
         }
 
         function deleteQuestion(questionId) {
@@ -2360,11 +2410,8 @@
                     
                     // Save after all files are processed
                     if (filesProcessed === totalFiles) {
-                        console.log(`📁 All ${totalFiles} files processed, saving...`);
-                        clearTimeout(saveTimeout);
-                        setTimeout(() => {
-                            autoSave();
-                        }, 500);
+                        console.log(`📁 All ${totalFiles} files processed`);
+                        queueSave(`images_processed_${totalFiles}`, IMMEDIATE_SAVE_DELAY);
                     }
                 };
                 reader.onerror = function() {
@@ -2372,10 +2419,7 @@
                     console.error('Error reading file:', file.name);
                     // Still save even if some files failed
                     if (filesProcessed === totalFiles) {
-                        clearTimeout(saveTimeout);
-                        setTimeout(() => {
-                            autoSave();
-                        }, 500);
+                        queueSave(`images_processed_with_errors_${totalFiles}`, IMMEDIATE_SAVE_DELAY);
                     }
                 };
                 reader.readAsDataURL(file);
@@ -2409,11 +2453,8 @@
                 updateThumbnails(questionId);
                 
                 // Force immediate save after image deletion
-                console.log('🗑️ Image deleted, forcing save');
-                clearTimeout(saveTimeout);
-                setTimeout(() => {
-                    autoSave();
-                }, 200);
+                console.log('🗑️ Image deleted');
+                queueSave('image_deleted', IMMEDIATE_SAVE_DELAY);
             }
         }
 
@@ -2446,11 +2487,8 @@
             
             // Force immediate save for ratings (only if not restoring)
             if (!isRestoring) {
-                console.log(`⭐ Rating set for ${ratingId}: ${value}, forcing save`);
-                clearTimeout(saveTimeout);
-                setTimeout(() => {
-                    autoSave();
-                }, 100);
+                console.log(`⭐ Rating set for ${ratingId}: ${value}`);
+                queueSave(`rating_${ratingId}_${value}`, IMMEDIATE_SAVE_DELAY);
             }
         }
 
