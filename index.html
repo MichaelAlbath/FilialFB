@@ -1334,6 +1334,7 @@
 
         // Auto-Save System
         let saveTimeout = null;
+        let isRestoring = false; // Flag to prevent auto-save during restore
         const SAVE_DELAY = 3000; // 3 seconds
         const STORAGE_KEY = 'budni_feedback_autosave';
 
@@ -1401,30 +1402,45 @@
             form.addEventListener('input', debounceAutoSave);
             form.addEventListener('change', debounceAutoSave);
             
+            setupAutoSaveForDynamicElements();
+        }
+
+        function setupAutoSaveForDynamicElements() {
             // File uploads (immediate save)
-            const fileInputs = form.querySelectorAll('input[type="file"]');
+            const fileInputs = document.querySelectorAll('input[type="file"]');
             fileInputs.forEach(input => {
-                input.addEventListener('change', () => {
-                    // Save immediately after file upload
-                    setTimeout(autoSave, 100);
-                });
+                // Remove existing listeners first
+                input.removeEventListener('change', handleFileUploadAutoSave);
+                input.addEventListener('change', handleFileUploadAutoSave);
             });
             
             // Rating clicks (immediate save)
-            const stars = form.querySelectorAll('.star');
+            const stars = document.querySelectorAll('.star');
             stars.forEach(star => {
-                star.addEventListener('click', () => {
-                    setTimeout(autoSave, 100);
-                });
+                // Remove existing listeners first
+                star.removeEventListener('click', handleRatingAutoSave);
+                star.addEventListener('click', handleRatingAutoSave);
             });
         }
 
+        function handleFileUploadAutoSave(event) {
+            // Save immediately after file upload
+            setTimeout(autoSave, 100);
+        }
+
+        function handleRatingAutoSave(event) {
+            setTimeout(autoSave, 100);
+        }
+
         function debounceAutoSave() {
+            if (isRestoring) return; // Don't save during restore
             clearTimeout(saveTimeout);
             saveTimeout = setTimeout(autoSave, SAVE_DELAY);
         }
 
         function autoSave() {
+            if (isRestoring) return; // Don't save during restore
+            
             try {
                 const saveData = {
                     // Basic form data
@@ -1472,6 +1488,14 @@
 
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(saveData));
                 
+                // Debug: Log what's being saved
+                console.log('💾 Auto-saving data:', {
+                    questions: Object.keys(saveData.questions).length,
+                    images: Object.keys(saveData.images).length,
+                    ratings: Object.keys(saveData.ratings).length,
+                    customTitles: Object.keys(saveData.customTitles).length
+                });
+                
                 // Visual feedback (optional)
                 showSaveIndicator();
                 
@@ -1515,7 +1539,17 @@
                 const saved = localStorage.getItem(STORAGE_KEY);
                 if (!saved) return;
 
+                isRestoring = true; // Set flag to prevent auto-save during restore
+
                 const saveData = JSON.parse(saved);
+                
+                // Debug: Log what's being restored
+                console.log('🔄 Restoring data:', {
+                    questions: Object.keys(saveData.questions || {}).length,
+                    images: Object.keys(saveData.images || {}).length,
+                    ratings: Object.keys(saveData.ratings || {}).length,
+                    customTitles: Object.keys(saveData.customTitles || {}).length
+                });
                 
                 // Restore basic form data
                 document.getElementById('auditorName').value = saveData.auditorName || '';
@@ -1538,24 +1572,34 @@
                 auditData.ratings = saveData.ratings || {};
                 auditData.customRatingTitles = saveData.customRatingTitles || {};
 
-                // Restore questions
-                if (saveData.questions && Object.keys(saveData.questions).length > 0) {
-                    restoreQuestions(saveData.questions);
-                }
-
-                // Restore custom rating categories
+                // Restore custom rating categories first
                 if (saveData.customRatingDescriptions) {
                     restoreCustomRatingCategories(saveData.customRatingDescriptions);
                 }
 
-                // Restore ratings
+                // Restore ratings (after custom categories are created)
                 if (saveData.ratings) {
+                    console.log('⭐ Restoring ratings:', saveData.ratings);
                     restoreRatings(saveData.ratings);
                 }
+
+                // Restore questions
+                if (saveData.questions && Object.keys(saveData.questions).length > 0) {
+                    console.log('📝 Restoring questions:', saveData.questions);
+                    restoreQuestions(saveData.questions);
+                }
+
+                // Re-setup auto-save listeners for restored elements
+                setTimeout(() => {
+                    setupAutoSaveForDynamicElements();
+                    isRestoring = false; // Clear flag after restore is complete
+                    console.log('✅ Restore complete');
+                }, 100);
 
             } catch (error) {
                 console.error('Failed to load saved data:', error);
                 localStorage.removeItem(STORAGE_KEY); // Clear corrupted data
+                isRestoring = false;
             }
         }
 
@@ -1732,6 +1776,11 @@
 
             ownSection.style.display = locationType === 'own' ? 'block' : 'none';
             competitorSection.style.display = locationType === 'competitor' ? 'block' : 'none';
+            
+            // Auto-save when location type changes (only if not restoring)
+            if (!isRestoring) {
+                debounceAutoSave();
+            }
         }
 
         function toggleThemeDropdown(questionId) {
@@ -1888,6 +1937,9 @@
             container.insertAdjacentHTML('beforeend', questionHTML);
             updateDeleteButtons();
             
+            // Setup auto-save for new elements
+            setupAutoSaveForDynamicElements();
+            
             const newQuestion = container.lastElementChild;
             newQuestion.scrollIntoView({ behavior: 'smooth', block: 'center' });
             
@@ -1970,6 +2022,9 @@
             if (auditData.images[questionId]) {
                 auditData.images[questionId].splice(imageIndex, 1);
                 updateThumbnails(questionId);
+                
+                // Auto-save
+                debounceAutoSave();
             }
         }
 
@@ -1999,6 +2054,11 @@
             };
             ratingText.textContent = ratingLabels[value];
             ratingText.style.color = value >= 4 ? '#28a745' : value >= 3 ? '#ffc107' : '#dc3545';
+            
+            // Auto-save only if not restoring
+            if (!isRestoring) {
+                setTimeout(autoSave, 100);
+            }
         }
 
         function deleteRating(ratingId) {
@@ -2007,6 +2067,9 @@
                 ratingItem.remove();
                 delete auditData.ratings[ratingId];
                 delete auditData.customRatingTitles[ratingId];
+                
+                // Auto-save
+                debounceAutoSave();
             }
         }
 
@@ -2045,6 +2108,12 @@
             
             const addRatingSection = document.querySelector('.add-rating-section');
             addRatingSection.insertAdjacentHTML('beforebegin', ratingHTML);
+            
+            // Setup auto-save for new star elements
+            setupAutoSaveForDynamicElements();
+            
+            // Auto-save
+            debounceAutoSave();
         }
 
         function generateReport() {
@@ -2206,6 +2275,10 @@
                 return;
             }
 
+            // Clear saved data
+            clearSavedData();
+            isRestoring = false; // Ensure flag is cleared
+
             auditData = {
                 questions: {},
                 images: {},
@@ -2265,6 +2338,11 @@
 
             document.getElementById('reportView').style.display = 'none';
             document.getElementById('auditForm').style.display = 'block';
+            
+            // Re-setup auto-save after reset
+            setTimeout(() => {
+                setupAutoSaveForDynamicElements();
+            }, 100);
         }
 
         // Image Modal Functions
