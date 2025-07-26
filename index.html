@@ -1491,6 +1491,9 @@
             setupBranchOptions();
             setupDropdownClosing();
             
+            // Setup thumbnail event delegation
+            setupThumbnailListeners();
+            
             // Try to load saved data first
             loadSavedData();
             
@@ -1865,6 +1868,9 @@
             });
 
             updateDeleteButtons();
+            
+            // Setup thumbnail listeners after restoration
+            setupThumbnailListeners();
         }
 
         function restoreCustomRatingCategories(customDescriptions) {
@@ -2400,6 +2406,8 @@
 
             if (totalFiles === 0) return;
 
+            console.log(`📤 Starting upload of ${totalFiles} files for question ${questionId}`);
+
             files.forEach(file => {
                 const reader = new FileReader();
                 reader.onload = function(e) {
@@ -2410,11 +2418,17 @@
                     updateThumbnails(questionId);
                     
                     filesProcessed++;
+                    console.log(`📁 File ${filesProcessed}/${totalFiles} processed`);
                     
                     // Save after all files are processed
                     if (filesProcessed === totalFiles) {
-                        console.log(`📁 All ${totalFiles} files processed`);
-                        queueSave(`images_processed_${totalFiles}`, IMMEDIATE_SAVE_DELAY);
+                        console.log(`✅ All ${totalFiles} files processed for question ${questionId}`);
+                        
+                        // Ensure event listeners are setup for new thumbnails
+                        setupThumbnailListeners();
+                        
+                        // Queue save with adequate delay for DOM updates
+                        queueSave(`images_processed_q${questionId}_${totalFiles}`, 800);
                     }
                 };
                 reader.onerror = function() {
@@ -2422,7 +2436,8 @@
                     console.error('Error reading file:', file.name);
                     // Still save even if some files failed
                     if (filesProcessed === totalFiles) {
-                        queueSave(`images_processed_with_errors_${totalFiles}`, IMMEDIATE_SAVE_DELAY);
+                        setupThumbnailListeners();
+                        queueSave(`images_processed_with_errors_q${questionId}_${totalFiles}`, 800);
                     }
                 };
                 reader.readAsDataURL(file);
@@ -2442,22 +2457,56 @@
                     const thumbnail = document.createElement('div');
                     thumbnail.className = 'thumbnail';
                     thumbnail.innerHTML = `
-                        <img src="${image.data}" alt="${image.name}" onclick="openImageModal('${image.data}', '${image.name}')">
-                        <button class="thumbnail-delete" onclick="deleteImage(${questionId}, ${index})">✕</button>
+                        <img src="${image.data}" alt="${image.name}" data-image-src="${image.data}" data-image-name="${image.name}">
+                        <button class="thumbnail-delete" data-question-id="${questionId}" data-image-index="${index}">✕</button>
                     `;
                     thumbnailsContainer.appendChild(thumbnail);
                 });
             }
+            
+            // Setup event listeners for new thumbnails using event delegation
+            setupThumbnailListeners();
+        }
+
+        function setupThumbnailListeners() {
+            // Remove existing listeners to prevent duplicates
+            document.removeEventListener('click', handleThumbnailClicks);
+            
+            // Add event delegation for thumbnail clicks
+            document.addEventListener('click', handleThumbnailClicks);
+        }
+
+        function handleThumbnailClicks(event) {
+            // Handle thumbnail image clicks (open modal)
+            if (event.target.matches('.thumbnail img')) {
+                const imageSrc = event.target.getAttribute('data-image-src');
+                const imageName = event.target.getAttribute('data-image-name');
+                openImageModal(imageSrc, imageName);
+                return;
+            }
+            
+            // Handle thumbnail delete clicks
+            if (event.target.matches('.thumbnail-delete')) {
+                const questionId = event.target.getAttribute('data-question-id');
+                const imageIndex = parseInt(event.target.getAttribute('data-image-index'));
+                deleteImage(questionId, imageIndex);
+                return;
+            }
         }
 
         function deleteImage(questionId, imageIndex) {
+            console.log(`🗑️ Deleting image ${imageIndex} from question ${questionId}`);
+            
             if (auditData.images[questionId]) {
                 auditData.images[questionId].splice(imageIndex, 1);
                 updateThumbnails(questionId);
                 
+                // Ensure event listeners are setup after DOM update
+                setupThumbnailListeners();
+                
                 // Force immediate save after image deletion
-                console.log('🗑️ Image deleted');
-                queueSave('image_deleted', IMMEDIATE_SAVE_DELAY);
+                console.log('🗑️ Image deleted, queuing save');
+                queueSave(`image_deleted_q${questionId}_idx${imageIndex}`, IMMEDIATE_SAVE_DELAY);
             }
         }
 
