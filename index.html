@@ -2228,8 +2228,8 @@
                 const titleElement = questionElement.querySelector('.question-number');
                 titleElement.textContent = newTitle.trim();
                 
-                // Auto-save
-                debounceAutoSave();
+                // Queue save
+                queueSave('title_edited', IMMEDIATE_SAVE_DELAY);
             }
             
             document.querySelectorAll('.theme-dropdown').forEach(d => d.classList.remove('show'));
@@ -2261,8 +2261,8 @@
                 const titleElement = ratingElement.querySelector('.rating-label');
                 titleElement.textContent = newTitle.trim();
                 
-                // Auto-save
-                debounceAutoSave();
+                // Queue save
+                queueSave('rating_title_edited', IMMEDIATE_SAVE_DELAY);
             }
         }
 
@@ -2367,8 +2367,11 @@
                 delete auditData.customTitles[questionId];
                 updateDeleteButtons();
                 
-                // Auto-save
-                debounceAutoSave();
+                // Re-setup listeners after DOM change
+                setupAutoSaveForDynamicElements();
+                
+                // Queue save
+                queueSave('question_deleted', IMMEDIATE_SAVE_DELAY);
             }
         }
 
@@ -2499,8 +2502,11 @@
                 delete auditData.ratings[ratingId];
                 delete auditData.customRatingTitles[ratingId];
                 
-                // Auto-save
-                debounceAutoSave();
+                // Re-setup listeners after DOM change
+                setupAutoSaveForDynamicElements();
+                
+                // Queue save
+                queueSave('rating_deleted', IMMEDIATE_SAVE_DELAY);
             }
         }
 
@@ -2543,8 +2549,8 @@
             // Setup auto-save for new star elements
             setupAutoSaveForDynamicElements();
             
-            // Auto-save
-            debounceAutoSave();
+            // Queue save
+            queueSave('rating_category_added', IMMEDIATE_SAVE_DELAY);
         }
 
         function generateReport() {
