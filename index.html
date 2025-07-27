@@ -881,7 +881,144 @@
             opacity: 1;
             transform: scale(1.1);
         }
-        @media (max-width: 768px) {
+        /* Custom prompt dialog */
+        .custom-prompt-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .custom-prompt-overlay.show {
+            display: flex;
+        }
+
+        .custom-prompt-dialog {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            animation: promptSlideIn 0.3s ease;
+        }
+
+        @keyframes promptSlideIn {
+            from {
+                transform: scale(0.8) translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .custom-prompt-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .custom-prompt-input-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .custom-prompt-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 12px;
+            font-size: 16px;
+            background: #f8fafc;
+            transition: all 0.3s ease;
+        }
+
+        .custom-prompt-input:focus {
+            outline: none;
+            border-color: #3f51b5;
+            background: white;
+            box-shadow: 0 8px 25px rgba(63, 81, 181, 0.15);
+        }
+
+        .custom-prompt-clear {
+            position: absolute;
+            top: 50%;
+            right: 15px;
+            transform: translateY(-50%);
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .custom-prompt-input-container:hover .custom-prompt-clear,
+        .custom-prompt-input:focus + .custom-prompt-clear {
+            opacity: 0.7;
+            pointer-events: all;
+        }
+
+        .custom-prompt-clear:hover {
+            background: #ff3742;
+            opacity: 1;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .custom-prompt-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .custom-prompt-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .custom-prompt-btn-cancel {
+            background: #6c757d;
+            color: white;
+        }
+
+        .custom-prompt-btn-cancel:hover {
+            background: #5a6268;
+        }
+
+        .custom-prompt-btn-ok {
+            background: linear-gradient(135deg, #3f51b5 0%, #00bcd4 100%);
+            color: white;
+        }
+
+        .custom-prompt-btn-ok:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(63, 81, 181, 0.3);
+        }
             body {
                 padding: 10px;
             }
@@ -1570,6 +1707,21 @@
         </div>
     </div>
 
+    <!-- Custom Prompt Dialog -->
+    <div id="customPromptOverlay" class="custom-prompt-overlay">
+        <div class="custom-prompt-dialog">
+            <div class="custom-prompt-title" id="customPromptTitle">Titel bearbeiten</div>
+            <div class="custom-prompt-input-container">
+                <input type="text" class="custom-prompt-input" id="customPromptInput" placeholder="Neuen Titel eingeben...">
+                <button type="button" class="custom-prompt-clear" onclick="clearCustomPromptInput()">✕</button>
+            </div>
+            <div class="custom-prompt-buttons">
+                <button type="button" class="custom-prompt-btn custom-prompt-btn-cancel" onclick="closeCustomPrompt(false)">Abbrechen</button>
+                <button type="button" class="custom-prompt-btn custom-prompt-btn-ok" onclick="closeCustomPrompt(true)">OK</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let questionCounter = 1;
         let ratingCounter = 0;
@@ -1622,6 +1774,85 @@
             
             // Initialize storage indicator
             updateStorageIndicator();
+        });
+
+        let customPromptCallback = null;
+
+        function showCustomPrompt(title, defaultValue = '', callback) {
+            const overlay = document.getElementById('customPromptOverlay');
+            const titleElement = document.getElementById('customPromptTitle');
+            const input = document.getElementById('customPromptInput');
+            
+            titleElement.textContent = title;
+            input.value = defaultValue;
+            customPromptCallback = callback;
+            
+            overlay.classList.add('show');
+            input.focus();
+            input.select();
+            
+            // Setup clear button visibility
+            setupCustomPromptClearButton();
+        }
+
+        function closeCustomPrompt(confirmed) {
+            const overlay = document.getElementById('customPromptOverlay');
+            const input = document.getElementById('customPromptInput');
+            
+            overlay.classList.remove('show');
+            
+            if (customPromptCallback) {
+                const result = confirmed ? input.value : null;
+                customPromptCallback(result);
+                customPromptCallback = null;
+            }
+        }
+
+        function clearCustomPromptInput() {
+            const input = document.getElementById('customPromptInput');
+            input.value = '';
+            input.focus();
+            
+            // Update clear button visibility
+            const clearButton = document.querySelector('.custom-prompt-clear');
+            clearButton.style.opacity = '0';
+            clearButton.style.pointerEvents = 'none';
+        }
+
+        function setupCustomPromptClearButton() {
+            const input = document.getElementById('customPromptInput');
+            const clearButton = document.querySelector('.custom-prompt-clear');
+            
+            const updateClearButton = () => {
+                if (input.value.trim() !== '') {
+                    clearButton.style.opacity = '0.7';
+                    clearButton.style.pointerEvents = 'all';
+                } else {
+                    clearButton.style.opacity = '0';
+                    clearButton.style.pointerEvents = 'none';
+                }
+            };
+            
+            // Initial check
+            updateClearButton();
+            
+            // Listen for changes
+            input.addEventListener('input', updateClearButton);
+            input.addEventListener('keyup', updateClearButton);
+        }
+
+        // Handle Enter and Escape keys in custom prompt
+        document.addEventListener('keydown', function(e) {
+            const overlay = document.getElementById('customPromptOverlay');
+            if (overlay.classList.contains('show')) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    closeCustomPrompt(true);
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    closeCustomPrompt(false);
+                }
+            }
         });
 
         function clearTextarea(button) {
@@ -2494,18 +2725,19 @@
 
         function editTitle(questionId) {
             const currentTitle = auditData.customTitles[questionId] || `Thema ${questionId}`;
-            const newTitle = prompt('Themen-Titel bearbeiten:', currentTitle);
             
-            if (newTitle !== null && newTitle.trim() !== '') {
-                auditData.customTitles[questionId] = newTitle.trim();
-                
-                const questionElement = document.querySelector(`[data-question="${questionId}"]`);
-                const titleElement = questionElement.querySelector('.question-number');
-                titleElement.textContent = newTitle.trim();
-                
-                // Queue save
-                queueSave('title_edited', IMMEDIATE_SAVE_DELAY);
-            }
+            showCustomPrompt('Themen-Titel bearbeiten:', currentTitle, (newTitle) => {
+                if (newTitle !== null && newTitle.trim() !== '') {
+                    auditData.customTitles[questionId] = newTitle.trim();
+                    
+                    const questionElement = document.querySelector(`[data-question="${questionId}"]`);
+                    const titleElement = questionElement.querySelector('.question-number');
+                    titleElement.textContent = newTitle.trim();
+                    
+                    // Queue save
+                    queueSave('title_edited', IMMEDIATE_SAVE_DELAY);
+                }
+            });
             
             document.querySelectorAll('.theme-dropdown').forEach(d => d.classList.remove('show'));
         }
@@ -2528,18 +2760,19 @@
             };
             
             const currentTitle = auditData.customRatingTitles[ratingId] || defaultTitles[ratingId];
-            const newTitle = prompt('Bewertungs-Titel bearbeiten:', currentTitle);
             
-            if (newTitle !== null && newTitle.trim() !== '') {
-                auditData.customRatingTitles[ratingId] = newTitle.trim();
-                
-                const ratingElement = document.querySelector(`[data-rating="${ratingId}"]`);
-                const titleElement = ratingElement.querySelector('.rating-label');
-                titleElement.textContent = newTitle.trim();
-                
-                // Queue save
-                queueSave('rating_title_edited', IMMEDIATE_SAVE_DELAY);
-            }
+            showCustomPrompt('Bewertungs-Titel bearbeiten:', currentTitle, (newTitle) => {
+                if (newTitle !== null && newTitle.trim() !== '') {
+                    auditData.customRatingTitles[ratingId] = newTitle.trim();
+                    
+                    const ratingElement = document.querySelector(`[data-rating="${ratingId}"]`);
+                    const titleElement = ratingElement.querySelector('.rating-label');
+                    titleElement.textContent = newTitle.trim();
+                    
+                    // Queue save
+                    queueSave('rating_title_edited', IMMEDIATE_SAVE_DELAY);
+                }
+            });
         }
 
         function addQuestion() {
@@ -2946,46 +3179,50 @@
         }
 
         function addNewRatingCategory() {
-            const categoryName = prompt('Name der neuen Bewertungskategorie:');
-            if (!categoryName || categoryName.trim() === '') {
-                return;
-            }
-
-            const categoryDescription = prompt('Beschreibung der Kategorie (optional):') || 'Benutzerdefinierte Kategorie';
-            
-            ratingCounter++;
-            const ratingId = `custom-${ratingCounter}`;
-            
-            auditData.customRatingTitles[ratingId] = categoryName.trim();
-            
-            const ratingHTML = `
-                <div class="rating-item" data-rating="${ratingId}">
-                    <div class="rating-header">
-                        <div>
-                            <div class="rating-label" onclick="editRatingTitle('${ratingId}')">${categoryName.trim()}</div>
-                            <div class="rating-description">${categoryDescription}</div>
+            showCustomPrompt('Name der neuen Bewertungskategorie:', '', (categoryName) => {
+                if (!categoryName || categoryName.trim() === '') {
+                    return;
+                }
+                
+                // Second prompt for description
+                showCustomPrompt('Beschreibung der Kategorie (optional):', '', (categoryDescription) => {
+                    const description = categoryDescription || 'Benutzerdefinierte Kategorie';
+                    
+                    ratingCounter++;
+                    const ratingId = `custom-${ratingCounter}`;
+                    
+                    auditData.customRatingTitles[ratingId] = categoryName.trim();
+                    
+                    const ratingHTML = `
+                        <div class="rating-item" data-rating="${ratingId}">
+                            <div class="rating-header">
+                                <div>
+                                    <div class="rating-label" onclick="editRatingTitle('${ratingId}')">${categoryName.trim()}</div>
+                                    <div class="rating-description">${description}</div>
+                                </div>
+                                <button type="button" class="rating-delete" onclick="deleteRating('${ratingId}')">✕ Entfernen</button>
+                            </div>
+                            <div class="star-rating" data-rating-id="${ratingId}">
+                                <span class="star" data-value="1" onclick="setRating('${ratingId}', 1)">☆</span>
+                                <span class="star" data-value="2" onclick="setRating('${ratingId}', 2)">☆</span>
+                                <span class="star" data-value="3" onclick="setRating('${ratingId}', 3)">☆</span>
+                                <span class="star" data-value="4" onclick="setRating('${ratingId}', 4)">☆</span>
+                                <span class="star" data-value="5" onclick="setRating('${ratingId}', 5)">☆</span>
+                            </div>
+                            <div class="rating-value" id="rating-${ratingId}">Noch nicht bewertet</div>
                         </div>
-                        <button type="button" class="rating-delete" onclick="deleteRating('${ratingId}')">✕ Entfernen</button>
-                    </div>
-                    <div class="star-rating" data-rating-id="${ratingId}">
-                        <span class="star" data-value="1" onclick="setRating('${ratingId}', 1)">☆</span>
-                        <span class="star" data-value="2" onclick="setRating('${ratingId}', 2)">☆</span>
-                        <span class="star" data-value="3" onclick="setRating('${ratingId}', 3)">☆</span>
-                        <span class="star" data-value="4" onclick="setRating('${ratingId}', 4)">☆</span>
-                        <span class="star" data-value="5" onclick="setRating('${ratingId}', 5)">☆</span>
-                    </div>
-                    <div class="rating-value" id="rating-${ratingId}">Noch nicht bewertet</div>
-                </div>
-            `;
-            
-            const addRatingSection = document.querySelector('.add-rating-section');
-            addRatingSection.insertAdjacentHTML('beforebegin', ratingHTML);
-            
-            // Setup auto-save for new star elements
-            setupAutoSaveForDynamicElements();
-            
-            // Queue save
-            queueSave('rating_category_added', IMMEDIATE_SAVE_DELAY);
+                    `;
+                    
+                    const addRatingSection = document.querySelector('.add-rating-section');
+                    addRatingSection.insertAdjacentHTML('beforebegin', ratingHTML);
+                    
+                    // Setup auto-save for new star elements
+                    setupAutoSaveForDynamicElements();
+                    
+                    // Queue save
+                    queueSave('rating_category_added', IMMEDIATE_SAVE_DELAY);
+                });
+            });
         }
 
         function generateReport() {
