@@ -2409,20 +2409,23 @@
             console.log(`📤 Starting upload of ${totalFiles} files for question ${questionId}`);
 
             files.forEach(file => {
-                const reader = new FileReader();
-                reader.onload = function(e) {
+                // Compress each image before storing
+                compressImage(file, (compressedDataUrl, originalSize, compressedSize) => {
                     auditData.images[questionId].push({
-                        name: file.name,
-                        data: e.target.result
+                        name: file.name.replace(/\.[^/.]+$/, '') + '.jpg', // Force .jpg extension
+                        data: compressedDataUrl,
+                        originalSize: originalSize,
+                        compressedSize: compressedSize
                     });
+                    
                     updateThumbnails(questionId);
                     
                     filesProcessed++;
-                    console.log(`📁 File ${filesProcessed}/${totalFiles} processed`);
+                    console.log(`📁 File ${filesProcessed}/${totalFiles} processed: ${file.name} (${(originalSize/1024).toFixed(1)}KB → ${(compressedSize/1024).toFixed(1)}KB)`);
                     
                     // Save after all files are processed
                     if (filesProcessed === totalFiles) {
-                        console.log(`✅ All ${totalFiles} files processed for question ${questionId}`);
+                        console.log(`✅ All ${totalFiles} files processed and compressed for question ${questionId}`);
                         
                         // Ensure event listeners are setup for new thumbnails
                         setupThumbnailListeners();
@@ -2430,20 +2433,123 @@
                         // Queue save with adequate delay for DOM updates
                         queueSave(`images_processed_q${questionId}_${totalFiles}`, 800);
                     }
-                };
-                reader.onerror = function() {
+                }, (error) => {
+                    // Error handling
+                    console.error('Error compressing image:', file.name, error);
                     filesProcessed++;
-                    console.error('Error reading file:', file.name);
-                    // Still save even if some files failed
+                    
+                    // Still continue processing other files
                     if (filesProcessed === totalFiles) {
                         setupThumbnailListeners();
                         queueSave(`images_processed_with_errors_q${questionId}_${totalFiles}`, 800);
                     }
-                };
-                reader.readAsDataURL(file);
+                });
             });
             
             input.value = '';
+        }
+
+        function compressImage(file, successCallback, errorCallback) {
+            const maxSizeKB = 150; // Target size in KB
+            const maxSizeBytes = maxSizeKB * 1024;
+            
+            // Create image object
+            const img = new Image();
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            img.onload = function() {
+                // Calculate new dimensions while maintaining aspect ratio
+                let { width, height } = calculateOptimalDimensions(img.width, img.height, file.size, maxSizeBytes);
+                
+                canvas.width = width;
+                canvas.height = height;
+                
+                // Draw and compress
+                ctx.fillStyle = 'white'; // White background for JPG
+                ctx.fillRect(0, 0, width, height);
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Start with high quality and reduce if needed
+                let quality = 0.9;
+                let compressedDataUrl;
+                let attempts = 0;
+                const maxAttempts = 8;
+                
+                do {
+                    compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+                    const compressedSize = getBase64Size(compressedDataUrl);
+                    
+                    console.log(`🔄 Compression attempt ${attempts + 1}: ${(compressedSize/1024).toFixed(1)}KB at quality ${quality.toFixed(2)}`);
+                    
+                    if (compressedSize <= maxSizeBytes || attempts >= maxAttempts) {
+                        // Success or max attempts reached
+                        successCallback(compressedDataUrl, file.size, compressedSize);
+                        return;
+                    }
+                    
+                    // Reduce quality for next attempt
+                    quality = Math.max(0.1, quality - 0.1);
+                    attempts++;
+                    
+                } while (attempts < maxAttempts);
+                
+                // Fallback: very aggressive compression
+                compressedDataUrl = canvas.toDataURL('image/jpeg', 0.1);
+                const finalSize = getBase64Size(compressedDataUrl);
+                console.warn(`⚠️ Using minimum quality compression: ${(finalSize/1024).toFixed(1)}KB`);
+                successCallback(compressedDataUrl, file.size, finalSize);
+            };
+            
+            img.onerror = function() {
+                errorCallback('Failed to load image');
+            };
+            
+            // Load the image
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                img.src = e.target.result;
+            };
+            reader.onerror = function() {
+                errorCallback('Failed to read file');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function calculateOptimalDimensions(originalWidth, originalHeight, fileSize, targetSize) {
+            // Estimate compression ratio needed
+            const compressionRatio = Math.sqrt(targetSize / fileSize);
+            
+            // Apply compression ratio to dimensions
+            let width = Math.floor(originalWidth * compressionRatio);
+            let height = Math.floor(originalHeight * compressionRatio);
+            
+            // Ensure minimum dimensions
+            const minDimension = 200;
+            if (width < minDimension || height < minDimension) {
+                const scale = minDimension / Math.min(width, height);
+                width = Math.floor(width * scale);
+                height = Math.floor(height * scale);
+            }
+            
+            // Ensure maximum dimensions
+            const maxDimension = 1200;
+            if (width > maxDimension || height > maxDimension) {
+                const scale = maxDimension / Math.max(width, height);
+                width = Math.floor(width * scale);
+                height = Math.floor(height * scale);
+            }
+            
+            console.log(`📐 Dimensions: ${originalWidth}x${originalHeight} → ${width}x${height} (ratio: ${compressionRatio.toFixed(2)})`);
+            
+            return { width, height };
+        }
+
+        function getBase64Size(base64String) {
+            // Calculate actual byte size of base64 string
+            const base64Data = base64String.split(',')[1];
+            const padding = (base64Data.match(/=/g) || []).length;
+            return (base64Data.length * 0.75) - padding;
         }
 
         function updateThumbnails(questionId) {
