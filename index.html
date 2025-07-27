@@ -1,4 +1,20 @@
-<!DOCTYPE html>
+                    <div class="rating-item" data-rating="displayzustand">
+                        <div class="rating-header">
+                            <div>
+                                <div class="rating-label" onclick="editRatingTitle('displayzustand')">Displayzustand</div>
+                                <div class="rating-description">Befüllung, rechtzeitiger Abbau</div>
+                            </div>
+                            <button type="button" class="rating-delete" onclick="deleteRating('displayzustand')">✕</button>
+                        </div>
+                        <div class="star-rating" data-rating-id="displayzustand">
+                            <span class="star" data-value="1" onclick="setRating('displayzustand', 1)">☆</span>
+                            <span class="star" data-value="2" onclick="setRating('displayzustand', 2)">☆</span>
+                            <span class="star" data-value="3" onclick="setRating('displayzustand', 3)">☆</span>
+                            <span class="star" data-value="4" onclick="setRating('displayzustand', 4)">☆</span>
+                            <span class="star" data-value="5" onclick="setRating('displayzustand', 5)">☆</span>
+                        </div>
+                        <div class="rating-value" id="rating-displayzustand">Noch nicht bewertet</div>
+                    </div><!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
@@ -443,11 +459,17 @@
             background: #ff4757;
             color: white;
             border: none;
-            padding: 6px 10px;
-            border-radius: 6px;
+            padding: 4px 8px;
+            border-radius: 50%;
             cursor: pointer;
             font-size: 12px;
             transition: all 0.3s ease;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
         }
 
         .rating-delete:hover {
@@ -580,8 +602,8 @@
 
         .report-images {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 8px;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
             margin-top: 15px;
         }
 
@@ -591,6 +613,11 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             cursor: pointer;
             transition: all 0.3s ease;
+            background: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100px;
         }
 
         .report-image:hover {
@@ -600,8 +627,10 @@
 
         .report-image img {
             width: 100%;
-            height: 120px;
-            object-fit: cover;
+            height: auto;
+            object-fit: contain;
+            max-height: 200px;
+            border-radius: 4px;
         }
 
         .back-to-form {
@@ -1198,7 +1227,7 @@
                                 <div class="rating-label" onclick="editRatingTitle('aussenbereich')">Außenbereich</div>
                                 <div class="rating-description">Warenfülle Schütten, Unkraut, Markise</div>
                             </div>
-                            <button type="button" class="rating-delete" onclick="deleteRating('aussenbereich')">✕ Entfernen</button>
+                            <button type="button" class="rating-delete" onclick="deleteRating('aussenbereich')">✕</button>
                         </div>
                         <div class="star-rating" data-rating-id="aussenbereich">
                             <span class="star" data-value="1" onclick="setRating('aussenbereich', 1)">☆</span>
@@ -1216,7 +1245,7 @@
                                 <div class="rating-label" onclick="editRatingTitle('aktionszone')">Aktionszone</div>
                                 <div class="rating-description">Aktionsmeter, Saisonwand</div>
                             </div>
-                            <button type="button" class="rating-delete" onclick="deleteRating('aktionszone')">✕ Entfernen</button>
+                            <button type="button" class="rating-delete" onclick="deleteRating('aktionszone')">✕</button>
                         </div>
                         <div class="star-rating" data-rating-id="aktionszone">
                             <span class="star" data-value="1" onclick="setRating('aktionszone', 1)">☆</span>
@@ -1234,7 +1263,7 @@
                                 <div class="rating-label" onclick="editRatingTitle('dekorative-kosmetik')">Dekorative Kosmetik</div>
                                 <div class="rating-description">Ordnung, Abverkaufsware, Spiegel</div>
                             </div>
-                            <button type="button" class="rating-delete" onclick="deleteRating('dekorative-kosmetik')">✕ Entfernen</button>
+                            <button type="button" class="rating-delete" onclick="deleteRating('dekorative-kosmetik')">✕</button>
                         </div>
                         <div class="star-rating" data-rating-id="dekorative-kosmetik">
                             <span class="star" data-value="1" onclick="setRating('dekorative-kosmetik', 1)">☆</span>
@@ -1252,7 +1281,7 @@
                                 <div class="rating-label" onclick="editRatingTitle('regalbild')">Regalbild</div>
                                 <div class="rating-description">vorgezogen, OOS Situation, FL zugestellt</div>
                             </div>
-                            <button type="button" class="rating-delete" onclick="deleteRating('regalbild')">✕ Entfernen</button>
+                            <button type="button" class="rating-delete" onclick="deleteRating('regalbild')">✕</button>
                         </div>
                         <div class="star-rating" data-rating-id="regalbild">
                             <span class="star" data-value="1" onclick="setRating('regalbild', 1)">☆</span>
@@ -1270,7 +1299,7 @@
                                 <div class="rating-label" onclick="editRatingTitle('mopro')">Mopro</div>
                                 <div class="rating-description">Warenfülle, Top 50, Reduzierungen</div>
                             </div>
-                            <button type="button" class="rating-delete" onclick="deleteRating('mopro')">✕ Entfernen</button>
+                            <button type="button" class="rating-delete" onclick="deleteRating('mopro')">✕</button>
                         </div>
                         <div class="star-rating" data-rating-id="mopro">
                             <span class="star" data-value="1" onclick="setRating('mopro', 1)">☆</span>
@@ -1288,7 +1317,7 @@
                                 <div class="rating-label" onclick="editRatingTitle('marketingmittel')">Marketingmittel</div>
                                 <div class="rating-description">Vollständigkeit, kein Tesa</div>
                             </div>
-                            <button type="button" class="rating-delete" onclick="deleteRating('marketingmittel')">✕ Entfernen</button>
+                            <button type="button" class="rating-delete" onclick="deleteRating('marketingmittel')">✕</button>
                         </div>
                         <div class="star-rating" data-rating-id="marketingmittel">
                             <span class="star" data-value="1" onclick="setRating('marketingmittel', 1)">☆</span>
@@ -1306,7 +1335,7 @@
                                 <div class="rating-label" onclick="editRatingTitle('sauberkeit')">Sauberkeit</div>
                                 <div class="rating-description">genereller Eindruck, Spinnweben, Reinigungsleistung Boden</div>
                             </div>
-                            <button type="button" class="rating-delete" onclick="deleteRating('sauberkeit')">✕ Entfernen</button>
+                            <button type="button" class="rating-delete" onclick="deleteRating('sauberkeit')">✕</button>
                         </div>
                         <div class="star-rating" data-rating-id="sauberkeit">
                             <span class="star" data-value="1" onclick="setRating('sauberkeit', 1)">☆</span>
@@ -1324,7 +1353,7 @@
                                 <div class="rating-label" onclick="editRatingTitle('ordnung-kasse')">Ordnung Kasse</div>
                                 <div class="rating-description">keine Plakate, keine Flyer, freie Arbeitsplätze</div>
                             </div>
-                            <button type="button" class="rating-delete" onclick="deleteRating('ordnung-kasse')">✕ Entfernen</button>
+                            <button type="button" class="rating-delete" onclick="deleteRating('ordnung-kasse')">✕</button>
                         </div>
                         <div class="star-rating" data-rating-id="ordnung-kasse">
                             <span class="star" data-value="1" onclick="setRating('ordnung-kasse', 1)">☆</span>
@@ -1342,7 +1371,7 @@
                                 <div class="rating-label" onclick="editRatingTitle('pausenraum')">Pausenraum</div>
                                 <div class="rating-description">Pflegezustand, Kühlschrank</div>
                             </div>
-                            <button type="button" class="rating-delete" onclick="deleteRating('pausenraum')">✕ Entfernen</button>
+                            <button type="button" class="rating-delete" onclick="deleteRating('pausenraum')">✕</button>
                         </div>
                         <div class="star-rating" data-rating-id="pausenraum">
                             <span class="star" data-value="1" onclick="setRating('pausenraum', 1)">☆</span>
@@ -1360,7 +1389,7 @@
                                 <div class="rating-label" onclick="editRatingTitle('lager')">Lager</div>
                                 <div class="rating-description">Ordnung, Füllstand Rollis</div>
                             </div>
-                            <button type="button" class="rating-delete" onclick="deleteRating('lager')">✕ Entfernen</button>
+                            <button type="button" class="rating-delete" onclick="deleteRating('lager')">✕</button>
                         </div>
                         <div class="star-rating" data-rating-id="lager">
                             <span class="star" data-value="1" onclick="setRating('lager', 1)">☆</span>
@@ -1378,7 +1407,7 @@
                                 <div class="rating-label" onclick="editRatingTitle('packtische')">Packtische</div>
                                 <div class="rating-description">sauber und nicht überfrachtet</div>
                             </div>
-                            <button type="button" class="rating-delete" onclick="deleteRating('packtische')">✕ Entfernen</button>
+                            <button type="button" class="rating-delete" onclick="deleteRating('packtische')">✕</button>
                         </div>
                         <div class="star-rating" data-rating-id="packtische">
                             <span class="star" data-value="1" onclick="setRating('packtische', 1)">☆</span>
@@ -1390,22 +1419,22 @@
                         <div class="rating-value" id="rating-packtische">Noch nicht bewertet</div>
                     </div>
 
-                    <div class="rating-item" data-rating="displayzustand">
+                    <div class="rating-item" data-rating="preisauszeichnung">
                         <div class="rating-header">
                             <div>
-                                <div class="rating-label" onclick="editRatingTitle('displayzustand')">Displayzustand</div>
-                                <div class="rating-description">Befüllung, rechtzeitiger Abbau</div>
+                                <div class="rating-label" onclick="editRatingTitle('preisauszeichnung')">Preisauszeichnung</div>
+                                <div class="rating-description">Preisauszeichungsqualität, Rahmen, kein Tesa</div>
                             </div>
-                            <button type="button" class="rating-delete" onclick="deleteRating('displayzustand')">✕ Entfernen</button>
+                            <button type="button" class="rating-delete" onclick="deleteRating('preisauszeichnung')">✕</button>
                         </div>
-                        <div class="star-rating" data-rating-id="displayzustand">
-                            <span class="star" data-value="1" onclick="setRating('displayzustand', 1)">☆</span>
-                            <span class="star" data-value="2" onclick="setRating('displayzustand', 2)">☆</span>
-                            <span class="star" data-value="3" onclick="setRating('displayzustand', 3)">☆</span>
-                            <span class="star" data-value="4" onclick="setRating('displayzustand', 4)">☆</span>
-                            <span class="star" data-value="5" onclick="setRating('displayzustand', 5)">☆</span>
+                        <div class="star-rating" data-rating-id="preisauszeichnung">
+                            <span class="star" data-value="1" onclick="setRating('preisauszeichnung', 1)">☆</span>
+                            <span class="star" data-value="2" onclick="setRating('preisauszeichnung', 2)">☆</span>
+                            <span class="star" data-value="3" onclick="setRating('preisauszeichnung', 3)">☆</span>
+                            <span class="star" data-value="4" onclick="setRating('preisauszeichnung', 4)">☆</span>
+                            <span class="star" data-value="5" onclick="setRating('preisauszeichnung', 5)">☆</span>
                         </div>
-                        <div class="rating-value" id="rating-displayzustand">Noch nicht bewertet</div>
+                        <div class="rating-value" id="rating-preisauszeichnung">Noch nicht bewertet</div>
                     </div>
                 </div>
 
@@ -1700,35 +1729,100 @@
                 });
 
                 const dataString = JSON.stringify(saveData);
+                const dataSizeKB = (dataString.length / 1024).toFixed(1);
+                
+                // Check if data is too large (localStorage limit is usually 5-10MB)
+                const maxSizeKB = 4000; // 4MB safety limit
+                if (dataString.length > maxSizeKB * 1024) {
+                    console.error(`❌ Data too large: ${dataSizeKB}KB (max: ${maxSizeKB}KB)`);
+                    
+                    // Calculate image sizes
+                    let totalImageSize = 0;
+                    let imageCount = 0;
+                    Object.keys(saveData.images).forEach(questionId => {
+                        if (saveData.images[questionId]) {
+                            saveData.images[questionId].forEach(image => {
+                                totalImageSize += getBase64Size(image.data);
+                                imageCount++;
+                            });
+                        }
+                    });
+                    
+                    console.error(`📊 Storage analysis: ${imageCount} images = ${(totalImageSize/1024).toFixed(1)}KB`);
+                    
+                    // Show user-friendly error
+                    alert(`⚠️ Zu viele Bilder!\n\nSpeicher voll: ${dataSizeKB}KB von ${maxSizeKB}KB\n\nBitte löschen Sie einige Bilder oder erstellen Sie den Bericht jetzt.`);
+                    return;
+                }
+                
                 localStorage.setItem(STORAGE_KEY, dataString);
+                
+                // Calculate image statistics
+                let totalImageSize = 0;
+                let imageCount = 0;
+                Object.keys(saveData.images).forEach(questionId => {
+                    if (saveData.images[questionId]) {
+                        imageCount += saveData.images[questionId].length;
+                        saveData.images[questionId].forEach(image => {
+                            totalImageSize += getBase64Size(image.data);
+                        });
+                    }
+                });
                 
                 // Debug: Log what's being saved
                 console.log('💾 Auto-saving data:', {
                     questions: Object.keys(saveData.questions).length,
-                    images: Object.keys(saveData.images).length,
+                    images: imageCount,
                     ratings: Object.keys(saveData.ratings).length,
                     customTitles: Object.keys(saveData.customTitles).length,
-                    dataSize: (dataString.length / 1024).toFixed(1) + 'KB'
+                    totalDataSize: dataSizeKB + 'KB',
+                    imageDataSize: (totalImageSize/1024).toFixed(1) + 'KB'
                 });
                 
-                // Visual feedback (optional)
+                // Visual feedback
                 showSaveIndicator();
                 
             } catch (error) {
                 console.error('Auto-save failed:', error);
-                // Try to clear potentially corrupted data
-                if (error.name === 'QuotaExceededError') {
-                    console.warn('Storage quota exceeded, clearing old data');
+                
+                // Handle specific errors
+                if (error.name === 'QuotaExceededError' || error.message.includes('quota')) {
+                    console.warn('Storage quota exceeded, showing user warning');
+                    alert('⚠️ Speicher voll!\n\nBitte löschen Sie einige Bilder oder erstellen Sie jetzt den Bericht.\n\nDanach können Sie ein neues Feedback starten.');
+                    
+                    // Don't clear data automatically - let user decide
+                    return;
+                }
+                
+                // For other errors, try to clear potentially corrupted data
+                try {
                     localStorage.removeItem(STORAGE_KEY);
+                    console.log('🧹 Cleared potentially corrupted data');
+                } catch (clearError) {
+                    console.error('Failed to clear corrupted data:', clearError);
                 }
             }
         }
 
         function showSaveIndicator() {
-            // Subtle save indicator
+            // Enhanced save indicator with data size info
             const indicator = document.querySelector('.save-indicator') || createSaveIndicator();
+            
+            // Calculate current data size
+            try {
+                const savedData = localStorage.getItem(STORAGE_KEY);
+                if (savedData) {
+                    const sizeKB = (savedData.length / 1024).toFixed(1);
+                    indicator.textContent = `💾 Gespeichert (${sizeKB}KB)`;
+                } else {
+                    indicator.textContent = '💾 Gespeichert';
+                }
+            } catch (e) {
+                indicator.textContent = '💾 Gespeichert';
+            }
+            
             indicator.style.opacity = '1';
-            setTimeout(() => indicator.style.opacity = '0', 1000);
+            setTimeout(() => indicator.style.opacity = '0', 2000);
         }
 
         function createSaveIndicator() {
@@ -2254,6 +2348,7 @@
                 'pausenraum': 'Pausenraum',
                 'lager': 'Lager',
                 'packtische': 'Packtische',
+                'preisauszeichnung': 'Preisauszeichnung',
                 'displayzustand': 'Displayzustand'
             };
             
@@ -2821,6 +2916,7 @@
                     'pausenraum': 'Pausenraum',
                     'lager': 'Lager',
                     'packtische': 'Packtische',
+                    'preisauszeichnung': 'Preisauszeichnung',
                     'displayzustand': 'Displayzustand'
                 };
 
@@ -3020,8 +3116,8 @@
                         .report-section h3 { font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 15px; }
                         .report-content { font-size: 14px; color: #334155; margin-bottom: 20px; }
                         .report-images { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 15px; }
-                        .report-image { border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-                        .report-image img { width: 100%; height: 120px; object-fit: cover; }
+                        .report-image { border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); background: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100px; }
+                        .report-image img { width: 100%; height: auto; object-fit: contain; max-height: 200px; border-radius: 4px; }
                         @media print { body { margin: 0; } }
                     </style>
                 </head>
@@ -3073,6 +3169,7 @@
                     'pausenraum': 'Pausenraum',
                     'lager': 'Lager',
                     'packtische': 'Packtische',
+                    'preisauszeichnung': 'Preisauszeichnung',
                     'displayzustand': 'Displayzustand'
                 };
 
