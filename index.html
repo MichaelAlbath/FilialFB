@@ -3489,10 +3489,26 @@
         // Export Functions
         function shareReport() {
             const reportContent = generateReportHTML();
+            const auditorName = document.getElementById('auditorName').value.trim() || 'Anonym';
+            const locationType = document.getElementById('locationType').value;
+            const location = locationType === 'own' 
+                ? document.getElementById('ownBusiness').value 
+                : document.getElementById('competitor').value;
+            
+            // Sanitize location for filename
+            const sanitizedLocation = location
+                .replace(/[\/\\:*?"<>|]/g, '-')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '')
+                .substring(0, 50);
+            
+            const date = new Date().toISOString().split('T')[0];
+            const filename = `Budni-Feedback-${sanitizedLocation}-${auditorName}-${date}.html`;
             
             if (navigator.share) {
                 const blob = new Blob([reportContent], { type: 'text/html' });
-                const file = new File([blob], 'besuchsfeedback.html', { type: 'text/html' });
+                const file = new File([blob], filename, { type: 'text/html' });
                 
                 navigator.share({
                     title: 'Budni Besuchsfeedback',
@@ -3513,7 +3529,21 @@
         function downloadReport() {
             const reportContent = generateReportHTML();
             const auditorName = document.getElementById('auditorName').value.trim() || 'Anonym';
-            const filename = `Budni-Besuchsfeedback-${auditorName}-${new Date().toISOString().split('T')[0]}.html`;
+            const locationType = document.getElementById('locationType').value;
+            const location = locationType === 'own' 
+                ? document.getElementById('ownBusiness').value 
+                : document.getElementById('competitor').value;
+            
+            // Sanitize location for filename (remove invalid characters)
+            const sanitizedLocation = location
+                .replace(/[\/\\:*?"<>|]/g, '-')  // Replace invalid chars with dash
+                .replace(/\s+/g, '-')           // Replace spaces with dash
+                .replace(/-+/g, '-')            // Replace multiple dashes with single
+                .replace(/^-|-$/g, '')          // Remove leading/trailing dashes
+                .substring(0, 50);             // Limit length
+            
+            const date = new Date().toISOString().split('T')[0];
+            const filename = `Budni-Feedback-${sanitizedLocation}-${auditorName}-${date}.html`;
             
             const blob = new Blob([reportContent], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
