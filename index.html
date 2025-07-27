@@ -40,6 +40,22 @@
             position: relative;
         }
 
+        .storage-indicator {
+            position: absolute;
+            top: 55px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            min-width: 80px;
+            text-align: center;
+        }
+
         .header-reset-btn {
             position: absolute;
             top: 15px;
@@ -903,6 +919,7 @@
     <div class="container">
         <div class="header">
             <button type="button" class="header-reset-btn" onclick="resetForm()" title="🔄 Neues Feedback starten">🔄</button>
+            <div class="storage-indicator" id="storageIndicator">0KB / 4.25MB</div>
             <div class="budni-logo">
                 <svg viewBox="0 0 300 180" xmlns="http://www.w3.org/2000/svg">
                     <circle cx="90" cy="90" r="70" fill="#00bcd4"/>
@@ -1602,6 +1619,9 @@
             if (hasExistingData()) {
                 showRestoreNotification();
             }
+            
+            // Initialize storage indicator
+            updateStorageIndicator();
         });
 
         function clearTextarea(button) {
@@ -1838,7 +1858,7 @@
                 const dataSizeKB = (dataString.length / 1024).toFixed(1);
                 
                 // Check if data is too large (localStorage limit is usually 5-10MB)
-                const maxSizeKB = 4000; // 4MB safety limit
+                const maxSizeKB = 4352; // 4.25MB safety limit
                 if (dataString.length > maxSizeKB * 1024) {
                     console.error(`❌ Data too large: ${dataSizeKB}KB (max: ${maxSizeKB}KB)`);
                     
@@ -1888,6 +1908,9 @@
                 // Visual feedback
                 showSaveIndicator();
                 
+                // Update storage indicator
+                updateStorageIndicator();
+                
             } catch (error) {
                 console.error('Auto-save failed:', error);
                 
@@ -1907,6 +1930,45 @@
                 } catch (clearError) {
                     console.error('Failed to clear corrupted data:', clearError);
                 }
+            }
+        }
+
+        function updateStorageIndicator() {
+            const indicator = document.getElementById('storageIndicator');
+            if (!indicator) return;
+            
+            try {
+                const savedData = localStorage.getItem(STORAGE_KEY);
+                const currentSizeBytes = savedData ? savedData.length : 0;
+                const maxSizeBytes = 4.25 * 1024 * 1024; // 4.25MB
+                
+                // Convert to appropriate unit
+                let currentSize, maxSize, unit;
+                if (currentSizeBytes >= 1024 * 1024) {
+                    currentSize = (currentSizeBytes / (1024 * 1024)).toFixed(1);
+                    maxSize = (maxSizeBytes / (1024 * 1024)).toFixed(2);
+                    unit = 'MB';
+                } else {
+                    currentSize = (currentSizeBytes / 1024).toFixed(0);
+                    maxSize = (maxSizeBytes / 1024).toFixed(0);
+                    unit = 'KB';
+                }
+                
+                indicator.textContent = `${currentSize}${unit} / ${maxSize}${unit}`;
+                
+                // Color coding based on usage
+                const percentage = (currentSizeBytes / maxSizeBytes) * 100;
+                if (percentage > 80) {
+                    indicator.style.background = 'rgba(255, 107, 107, 0.8)'; // Red
+                } else if (percentage > 60) {
+                    indicator.style.background = 'rgba(255, 193, 7, 0.8)'; // Yellow
+                } else {
+                    indicator.style.background = 'rgba(255, 255, 255, 0.2)'; // Default
+                }
+                
+            } catch (error) {
+                indicator.textContent = '0KB / 4.25MB';
+                indicator.style.background = 'rgba(255, 255, 255, 0.2)';
             }
         }
 
@@ -2828,6 +2890,9 @@
                 // Force immediate save after image deletion
                 console.log('🗑️ Image deleted, queuing save');
                 queueSave(`image_deleted_q${questionId}_idx${imageIndex}`, IMMEDIATE_SAVE_DELAY);
+                
+                // Update storage indicator after deletion
+                setTimeout(() => updateStorageIndicator(), 100);
             }
         }
 
@@ -3155,6 +3220,7 @@
             // Re-setup auto-save after reset
             setTimeout(() => {
                 setupAutoSaveForDynamicElements();
+                updateStorageIndicator();
             }, 100);
         }
 
