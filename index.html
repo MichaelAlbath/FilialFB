@@ -589,6 +589,7 @@
             line-height: 1.6;
             color: #334155;
             margin-bottom: 20px;
+            text-align: center;
         }
 
         .report-images {
@@ -2949,7 +2950,7 @@
                     5: 'Sehr gut'
                 };
 
-                let ratingsHTML = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">';
+                let ratingsHTML = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">';
                 
                 Object.keys(auditData.ratings).forEach(ratingId => {
                     const rating = auditData.ratings[ratingId];
@@ -2959,10 +2960,10 @@
                     const color = rating >= 4 ? '#28a745' : rating >= 3 ? '#ffc107' : '#dc3545';
                     
                     ratingsHTML += `
-                        <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center;">
-                            <div style="font-weight: 600; margin-bottom: 8px;">${label}</div>
-                            <div style="font-size: 18px; margin-bottom: 5px;">${stars}</div>
-                            <div style="font-size: 12px; color: ${color};">${description}</div>
+                        <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                            <div style="font-weight: 600; margin-bottom: 8px; text-align: center;">${label}</div>
+                            <div style="font-size: 18px; margin-bottom: 5px; text-align: center;">${stars}</div>
+                            <div style="font-size: 12px; color: ${color}; text-align: center;">${description}</div>
                         </div>
                     `;
                 });
@@ -3142,7 +3143,7 @@
                         .report-meta { color: #64748b; font-size: 14px; }
                         .report-section { margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background: #f8fafc; }
                         .report-section h3 { font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 15px; text-align: center; }
-                        .report-content { font-size: 14px; color: #334155; margin-bottom: 20px; }
+                        .report-content { font-size: 14px; color: #334155; margin-bottom: 20px; text-align: center; }
                         .report-images { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 15px; }
                         .report-image { border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); background: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100px; }
                         .report-image img { width: 100%; height: auto; object-fit: contain; max-height: 200px; border-radius: 4px; }
@@ -3213,7 +3214,7 @@
                     <div class="report-section">
                         <h3>⭐ Bewertungen</h3>
                         <div class="report-content">
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
                 `;
 
                 Object.keys(auditData.ratings).forEach(ratingId => {
@@ -3224,10 +3225,10 @@
                     const color = rating >= 4 ? '#28a745' : rating >= 3 ? '#ffc107' : '#dc3545';
                     
                     htmlContent += `
-                        <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center;">
-                            <div style="font-weight: 600; margin-bottom: 8px;">${label}</div>
-                            <div style="font-size: 18px; margin-bottom: 5px;">${stars}</div>
-                            <div style="font-size: 12px; color: ${color};">${description}</div>
+                        <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                            <div style="font-weight: 600; margin-bottom: 8px; text-align: center;">${label}</div>
+                            <div style="font-size: 18px; margin-bottom: 5px; text-align: center;">${stars}</div>
+                            <div style="font-size: 12px; color: ${color}; text-align: center;">${description}</div>
                         </div>
                     `;
                 });
