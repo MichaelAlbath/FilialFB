@@ -3530,20 +3530,40 @@
             const reportContent = generateReportHTML();
             const auditorName = document.getElementById('auditorName').value.trim() || 'Anonym';
             const locationType = document.getElementById('locationType').value;
-            const location = locationType === 'own' 
-                ? document.getElementById('ownBusiness').value 
-                : document.getElementById('competitor').value;
+            
+            // Debug: Log values
+            console.log('Download Debug:', {
+                auditorName,
+                locationType,
+                ownBusiness: document.getElementById('ownBusiness').value,
+                competitor: document.getElementById('competitor').value
+            });
+            
+            let location = '';
+            if (locationType === 'own') {
+                location = document.getElementById('ownBusiness').value;
+            } else if (locationType === 'competitor') {
+                location = document.getElementById('competitor').value;
+            }
+            
+            // Fallback if no location
+            if (!location || location.trim() === '') {
+                location = 'Unbekannter-Standort';
+            }
             
             // Sanitize location for filename (remove invalid characters)
             const sanitizedLocation = location
                 .replace(/[\/\\:*?"<>|]/g, '-')  // Replace invalid chars with dash
                 .replace(/\s+/g, '-')           // Replace spaces with dash
+                .replace(/\([^)]*\)/g, '')      // Remove parentheses content like (727)
                 .replace(/-+/g, '-')            // Replace multiple dashes with single
                 .replace(/^-|-$/g, '')          // Remove leading/trailing dashes
-                .substring(0, 50);             // Limit length
+                .substring(0, 40);             // Limit length
             
             const date = new Date().toISOString().split('T')[0];
             const filename = `Budni-Feedback-${sanitizedLocation}-${auditorName}-${date}.html`;
+            
+            console.log('Generated filename:', filename);
             
             const blob = new Blob([reportContent], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
