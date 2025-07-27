@@ -261,11 +261,17 @@
             background: #ff4757;
             color: white;
             border: none;
-            padding: 8px 12px;
-            border-radius: 8px;
+            padding: 4px 8px;
+            border-radius: 50%;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 12px;
             transition: all 0.3s ease;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
         }
 
         .delete-question:hover {
@@ -575,6 +581,7 @@
             font-weight: 600;
             color: #1e293b;
             margin-bottom: 15px;
+            text-align: center;
         }
 
         .report-content {
@@ -1132,8 +1139,8 @@
                                         <div class="theme-dropdown-category">Außenbereich</div>
                                         <div class="theme-dropdown-description">Warenfülle Schütten, Unkraut, Markise</div>
                                     </div>
-                                    <div class="theme-dropdown-item" onclick="selectTheme(1, 'Aktionszone')">
-                                        <div class="theme-dropdown-category">Aktionszone</div>
+                                    <div class="theme-dropdown-item" onclick="selectTheme(1, 'Themenwände')">
+                                        <div class="theme-dropdown-category">Themenwände</div>
                                         <div class="theme-dropdown-description">Aktionsmeter, Saisonwand</div>
                                     </div>
                                     <div class="theme-dropdown-item" onclick="selectTheme(1, 'Dekorative Kosmetik')">
@@ -1144,8 +1151,8 @@
                                         <div class="theme-dropdown-category">Regalbild</div>
                                         <div class="theme-dropdown-description">vorgezogen, OOS Situation, FL zugestellt</div>
                                     </div>
-                                    <div class="theme-dropdown-item" onclick="selectTheme(1, 'Mopro')">
-                                        <div class="theme-dropdown-category">Mopro</div>
+                                    <div class="theme-dropdown-item" onclick="selectTheme(1, 'Mopro / TK / O&G')">
+                                        <div class="theme-dropdown-category">Mopro / TK / O&G</div>
                                         <div class="theme-dropdown-description">Warenfülle, Top 50, Reduzierungen</div>
                                     </div>
                                     <div class="theme-dropdown-item" onclick="selectTheme(1, 'Marketingmittel')">
@@ -1176,6 +1183,10 @@
                                         <div class="theme-dropdown-category">Displayzustand</div>
                                         <div class="theme-dropdown-description">Befüllung, rechtzeitiger Abbau</div>
                                     </div>
+                                    <div class="theme-dropdown-item" onclick="selectTheme(1, 'Preisauszeichnung')">
+                                        <div class="theme-dropdown-category">Preisauszeichnung</div>
+                                        <div class="theme-dropdown-description">Preisauszeichungsqualität, Rahmen, kein Tesa</div>
+                                    </div>
                                     <div class="theme-dropdown-item custom" onclick="editTitle(1)">
                                         ✏️ Freier Titel eingeben
                                     </div>
@@ -1183,7 +1194,7 @@
                             </div>
                             <button type="button" class="camera-icon" onclick="triggerFileInput(1)">📷</button>
                         </div>
-                        <button type="button" class="delete-question" onclick="deleteQuestion(1)" style="display: none;">✕ Löschen</button>
+                        <button type="button" class="delete-question" onclick="deleteQuestion(1)" style="display: none;">✕</button>
                     </div>
                     <div class="form-group">
                         <label>📝 Ihre Beobachtung:</label>
@@ -1223,22 +1234,22 @@
                         <div class="rating-value" id="rating-aussenbereich">Noch nicht bewertet</div>
                     </div>
 
-                    <div class="rating-item" data-rating="aktionszone">
+                    <div class="rating-item" data-rating="themenwände">
                         <div class="rating-header">
                             <div>
-                                <div class="rating-label" onclick="editRatingTitle('aktionszone')">Aktionszone</div>
+                                <div class="rating-label" onclick="editRatingTitle('themenwände')">Themenwände</div>
                                 <div class="rating-description">Aktionsmeter, Saisonwand</div>
                             </div>
-                            <button type="button" class="rating-delete" onclick="deleteRating('aktionszone')">✕</button>
+                            <button type="button" class="rating-delete" onclick="deleteRating('themenwände')">✕</button>
                         </div>
-                        <div class="star-rating" data-rating-id="aktionszone">
-                            <span class="star" data-value="1" onclick="setRating('aktionszone', 1)">☆</span>
-                            <span class="star" data-value="2" onclick="setRating('aktionszone', 2)">☆</span>
-                            <span class="star" data-value="3" onclick="setRating('aktionszone', 3)">☆</span>
-                            <span class="star" data-value="4" onclick="setRating('aktionszone', 4)">☆</span>
-                            <span class="star" data-value="5" onclick="setRating('aktionszone', 5)">☆</span>
+                        <div class="star-rating" data-rating-id="themenwände">
+                            <span class="star" data-value="1" onclick="setRating('themenwände', 1)">☆</span>
+                            <span class="star" data-value="2" onclick="setRating('themenwände', 2)">☆</span>
+                            <span class="star" data-value="3" onclick="setRating('themenwände', 3)">☆</span>
+                            <span class="star" data-value="4" onclick="setRating('themenwände', 4)">☆</span>
+                            <span class="star" data-value="5" onclick="setRating('themenwände', 5)">☆</span>
                         </div>
-                        <div class="rating-value" id="rating-aktionszone">Noch nicht bewertet</div>
+                        <div class="rating-value" id="rating-themenwände">Noch nicht bewertet</div>
                     </div>
 
                     <div class="rating-item" data-rating="dekorative-kosmetik">
@@ -1280,7 +1291,7 @@
                     <div class="rating-item" data-rating="mopro">
                         <div class="rating-header">
                             <div>
-                                <div class="rating-label" onclick="editRatingTitle('mopro')">Mopro</div>
+                                <div class="rating-label" onclick="editRatingTitle('mopro')">Mopro / TK / O&G</div>
                                 <div class="rating-description">Warenfülle, Top 50, Reduzierungen</div>
                             </div>
                             <button type="button" class="rating-delete" onclick="deleteRating('mopro')">✕</button>
@@ -2024,8 +2035,8 @@
                                         <div class="theme-dropdown-category">Außenbereich</div>
                                         <div class="theme-dropdown-description">Warenfülle Schütten, Unkraut, Markise</div>
                                     </div>
-                                    <div class="theme-dropdown-item" onclick="selectTheme(${questionNum}, 'Aktionszone')">
-                                        <div class="theme-dropdown-category">Aktionszone</div>
+                                    <div class="theme-dropdown-item" onclick="selectTheme(${questionNum}, 'Themenwände')">
+                                        <div class="theme-dropdown-category">Themenwände</div>
                                         <div class="theme-dropdown-description">Aktionsmeter, Saisonwand</div>
                                     </div>
                                     <div class="theme-dropdown-item" onclick="selectTheme(${questionNum}, 'Dekorative Kosmetik')">
@@ -2036,8 +2047,8 @@
                                         <div class="theme-dropdown-category">Regalbild</div>
                                         <div class="theme-dropdown-description">vorgezogen, OOS Situation, FL zugestellt</div>
                                     </div>
-                                    <div class="theme-dropdown-item" onclick="selectTheme(${questionNum}, 'Mopro')">
-                                        <div class="theme-dropdown-category">Mopro</div>
+                                    <div class="theme-dropdown-item" onclick="selectTheme(${questionNum}, 'Mopro / TK / O&G')">
+                                        <div class="theme-dropdown-category">Mopro / TK / O&G</div>
                                         <div class="theme-dropdown-description">Warenfülle, Top 50, Reduzierungen</div>
                                     </div>
                                     <div class="theme-dropdown-item" onclick="selectTheme(${questionNum}, 'Marketingmittel')">
@@ -2068,6 +2079,10 @@
                                         <div class="theme-dropdown-category">Displayzustand</div>
                                         <div class="theme-dropdown-description">Befüllung, rechtzeitiger Abbau</div>
                                     </div>
+                                    <div class="theme-dropdown-item" onclick="selectTheme(${questionNum}, 'Preisauszeichnung')">
+                                        <div class="theme-dropdown-category">Preisauszeichnung</div>
+                                        <div class="theme-dropdown-description">Preisauszeichungsqualität, Rahmen, kein Tesa</div>
+                                    </div>
                                     <div class="theme-dropdown-item custom" onclick="editTitle(${questionNum})">
                                         ✏️ Freier Titel eingeben
                                     </div>
@@ -2075,7 +2090,7 @@
                             </div>
                             <button type="button" class="camera-icon" onclick="triggerFileInput(${questionNum})">📷</button>
                         </div>
-                        <button type="button" class="delete-question" onclick="deleteQuestion(${questionNum})">✕ Löschen</button>
+                        <button type="button" class="delete-question" onclick="deleteQuestion(${questionNum})">✕</button>
                     </div>
                     <div class="form-group">
                         <label>📝 Ihre Beobachtung:</label>
@@ -2340,10 +2355,10 @@
         function editRatingTitle(ratingId) {
             const defaultTitles = {
                 'aussenbereich': 'Außenbereich',
-                'aktionszone': 'Aktionszone',
+                'themenwände': 'Themenwände',
                 'dekorative-kosmetik': 'Dekorative Kosmetik',
                 'regalbild': 'Regalbild',
-                'mopro': 'Mopro',
+                'mopro': 'Mopro / TK / O&G',
                 'marketingmittel': 'Marketingmittel',
                 'sauberkeit': 'Sauberkeit',
                 'ordnung-kasse': 'Ordnung Kasse',
@@ -2385,8 +2400,8 @@
                                         <div class="theme-dropdown-category">Außenbereich</div>
                                         <div class="theme-dropdown-description">Warenfülle Schütten, Unkraut, Markise</div>
                                     </div>
-                                    <div class="theme-dropdown-item" onclick="selectTheme(${questionCounter}, 'Aktionszone')">
-                                        <div class="theme-dropdown-category">Aktionszone</div>
+                                    <div class="theme-dropdown-item" onclick="selectTheme(${questionCounter}, 'Themenwände')">
+                                        <div class="theme-dropdown-category">Themenwände</div>
                                         <div class="theme-dropdown-description">Aktionsmeter, Saisonwand</div>
                                     </div>
                                     <div class="theme-dropdown-item" onclick="selectTheme(${questionCounter}, 'Dekorative Kosmetik')">
@@ -2397,8 +2412,8 @@
                                         <div class="theme-dropdown-category">Regalbild</div>
                                         <div class="theme-dropdown-description">vorgezogen, OOS Situation, FL zugestellt</div>
                                     </div>
-                                    <div class="theme-dropdown-item" onclick="selectTheme(${questionCounter}, 'Mopro')">
-                                        <div class="theme-dropdown-category">Mopro</div>
+                                    <div class="theme-dropdown-item" onclick="selectTheme(${questionCounter}, 'Mopro / TK / O&G')">
+                                        <div class="theme-dropdown-category">Mopro / TK / O&G</div>
                                         <div class="theme-dropdown-description">Warenfülle, Top 50, Reduzierungen</div>
                                     </div>
                                     <div class="theme-dropdown-item" onclick="selectTheme(${questionCounter}, 'Marketingmittel')">
@@ -2429,6 +2444,10 @@
                                         <div class="theme-dropdown-category">Displayzustand</div>
                                         <div class="theme-dropdown-description">Befüllung, rechtzeitiger Abbau</div>
                                     </div>
+                                    <div class="theme-dropdown-item" onclick="selectTheme(${questionCounter}, 'Preisauszeichnung')">
+                                        <div class="theme-dropdown-category">Preisauszeichnung</div>
+                                        <div class="theme-dropdown-description">Preisauszeichungsqualität, Rahmen, kein Tesa</div>
+                                    </div>
                                     <div class="theme-dropdown-item custom" onclick="editTitle(${questionCounter})">
                                         ✏️ Freier Titel eingeben
                                     </div>
@@ -2436,7 +2455,7 @@
                             </div>
                             <button type="button" class="camera-icon" onclick="triggerFileInput(${questionCounter})">📷</button>
                         </div>
-                        <button type="button" class="delete-question" onclick="deleteQuestion(${questionCounter})">✕ Löschen</button>
+                        <button type="button" class="delete-question" onclick="deleteQuestion(${questionCounter})">✕</button>
                     </div>
                     <div class="form-group">
                         <label>📝 Ihre Beobachtung:</label>
@@ -2908,10 +2927,10 @@
                 
                 const ratingLabels = {
                     'aussenbereich': 'Außenbereich',
-                    'aktionszone': 'Aktionszone',
+                    'themenwände': 'Themenwände',
                     'dekorative-kosmetik': 'Dekorative Kosmetik',
                     'regalbild': 'Regalbild',
-                    'mopro': 'Mopro',
+                    'mopro': 'Mopro / TK / O&G',
                     'marketingmittel': 'Marketingmittel',
                     'sauberkeit': 'Sauberkeit',
                     'ordnung-kasse': 'Ordnung Kasse',
@@ -3076,6 +3095,13 @@
                 navigator.share({
                     title: 'Budni Besuchsfeedback',
                     files: [file]
+                }).then(() => {
+                    // Nach erfolgreichem Teilen Reset-Dialog anzeigen
+                    setTimeout(() => {
+                        if (confirm('Feedback erfolgreich geteilt! Möchten Sie ein neues Feedback erstellen?')) {
+                            resetForm();
+                        }
+                    }, 500);
                 }).catch(console.error);
             } else {
                 alert('Teilen wird von diesem Browser nicht unterstützt.');
@@ -3115,7 +3141,7 @@
                         .report-title { font-size: 24px; font-weight: bold; color: #1e293b; margin-bottom: 10px; }
                         .report-meta { color: #64748b; font-size: 14px; }
                         .report-section { margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background: #f8fafc; }
-                        .report-section h3 { font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 15px; }
+                        .report-section h3 { font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 15px; text-align: center; }
                         .report-content { font-size: 14px; color: #334155; margin-bottom: 20px; }
                         .report-images { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 15px; }
                         .report-image { border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); background: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100px; }
@@ -3161,10 +3187,10 @@
             if (Object.keys(auditData.ratings).length > 0) {
                 const ratingLabels = {
                     'aussenbereich': 'Außenbereich',
-                    'aktionszone': 'Aktionszone',
+                    'themenwände': 'Themenwände',
                     'dekorative-kosmetik': 'Dekorative Kosmetik',
                     'regalbild': 'Regalbild',
-                    'mopro': 'Mopro',
+                    'mopro': 'Mopro / TK / O&G',
                     'marketingmittel': 'Marketingmittel',
                     'sauberkeit': 'Sauberkeit',
                     'ordnung-kasse': 'Ordnung Kasse',
@@ -3187,6 +3213,7 @@
                     <div class="report-section">
                         <h3>⭐ Bewertungen</h3>
                         <div class="report-content">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                 `;
 
                 Object.keys(auditData.ratings).forEach(ratingId => {
@@ -3194,11 +3221,18 @@
                     const label = auditData.customRatingTitles[ratingId] || ratingLabels[ratingId] || ratingId;
                     const description = ratingDescriptions[rating];
                     const stars = '⭐'.repeat(rating);
+                    const color = rating >= 4 ? '#28a745' : rating >= 3 ? '#ffc107' : '#dc3545';
                     
-                    htmlContent += `<p><strong>${label}:</strong> ${stars} (${description})</p>`;
+                    htmlContent += `
+                        <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center;">
+                            <div style="font-weight: 600; margin-bottom: 8px;">${label}</div>
+                            <div style="font-size: 18px; margin-bottom: 5px;">${stars}</div>
+                            <div style="font-size: 12px; color: ${color};">${description}</div>
+                        </div>
+                    `;
                 });
 
-                htmlContent += '</div></div>';
+                htmlContent += '</div></div></div>';
             }
             
             htmlContent += '</body></html>';
